@@ -24,6 +24,7 @@ import { FormFieldsSettings } from "@/components/FormFieldsSettings";
 import { CommitteeSettings } from "@/components/CommitteeSettings";
 import { BrandSettings } from "@/components/BrandSettings";
 import { MenuSettings } from "@/components/MenuSettings";
+import { PositionRoutesSettings } from "@/components/PositionRoutesSettings";
 import { DatabaseExport } from "@/components/DatabaseExport";
 import { EmailLogSettings } from "@/components/EmailLogSettings";
 import { EmailModeSettings } from "@/components/EmailModeSettings";
