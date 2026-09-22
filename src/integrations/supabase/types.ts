@@ -20,12 +20,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      sandbox_exec_sql: { Args: { q: string }; Returns: undefined }
+      [_ in never]: never
     }
     Enums: {
-      app_role: "admin" | "member"
-      report_status: "sent" | "read" | "validated"
-      task_status: "todo" | "doing" | "done"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -152,10 +150,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["admin", "member"],
-      report_status: ["sent", "read", "validated"],
-      task_status: ["todo", "doing", "done"],
-    },
+    Enums: {},
   },
 } as const
