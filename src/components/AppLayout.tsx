@@ -375,11 +375,24 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
             ))}
           </nav>
           <div className="flex flex-wrap items-center gap-2 px-4 py-3 print:hidden">
-            <p className="mr-auto text-xs text-muted-foreground">
-              {me?.profile?.full_name}
-              {org.myPositions.length > 0 ? ` : ${org.myPositions.join(", ")}` : ""}
-              {me?.isAdmin ? " (admin)" : ""}
-            </p>
+            <div className="mr-auto min-w-0">
+              <p className="text-xs text-muted-foreground">
+                {me?.profile?.full_name}
+                {org.myPositions.length > 0 ? ` : ${org.myPositions.join(", ")}` : ""}
+                {me?.isAdmin ? " (admin)" : ""}
+              </p>
+              {org.myPositions.length > 1 && org.activePosition && (
+                <p className="text-xs">
+                  <span className="text-primary">Poste utilisé : {org.activePosition}</span>
+                  {org.activePositionDescription && (
+                    <span className="text-muted-foreground">
+                      {" "}
+                      — {org.activePositionDescription}
+                    </span>
+                  )}
+                </p>
+              )}
+            </div>
             <GlobalSearch />
             <PositionSwitcher myPositions={org.myPositions} />
             <NotificationsBell userId={me?.userId} />
