@@ -64,6 +64,13 @@
       "when": 1790045883302,
       "tag": "0008_reset_public_schema_before_import",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790045918574,
+      "tag": "0009_recreate_sandbox_exec_sql_helper",
+      "breakpoints": true
     }
   ]
 }
