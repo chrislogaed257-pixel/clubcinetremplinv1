@@ -305,6 +305,10 @@ function SettingsPage() {
           <MenuSettings />
         </TabsContent>
 
+        <TabsContent value="position-routes" className="mt-6">
+          <PositionRoutesSettings />
+        </TabsContent>
+
         <TabsContent value="fields" className="mt-6">
           <FormFieldsSettings />
         </TabsContent>
