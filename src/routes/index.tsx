@@ -31,9 +31,16 @@ function Index() {
 
         On apprend, on tourne, on décolle.
       </p>
-      <Link to="/auth">
-        <Button size="lg">Se connecter</Button>
-      </Link>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Link to="/auth">
+          <Button size="lg">Se connecter</Button>
+        </Link>
+        <Link to="/presentation">
+          <Button size="lg" variant="outline">
+            Fiche de présentation
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }

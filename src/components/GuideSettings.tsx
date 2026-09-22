@@ -186,7 +186,16 @@ export function GuideSettings() {
               : new Date().toLocaleDateString("fr-FR")}
             . Le PDF est fabriqué au moment du clic : il contient toujours les dernières nouveautés.
           </p>
-          <Button onClick={buildPdf}>Télécharger le guide (PDF)</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={buildPdf}>Télécharger le guide (PDF)</Button>
+            <a href="/presentation" target="_blank" rel="noreferrer">
+              <Button variant="outline">Fiche de présentation illustrée</Button>
+            </a>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            La fiche illustrée s'ouvre dans un nouvel onglet : le bouton « Imprimer / PDF » permet de
+            la remettre aux membres.
+          </p>
         </CardContent>
       </Card>
 

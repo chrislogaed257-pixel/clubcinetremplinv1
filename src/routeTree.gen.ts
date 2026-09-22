@@ -16,6 +16,7 @@ import { Route as IdeesSoumissionRouteImport } from './routes/idees-soumission'
 import { Route as MentorEspaceRouteImport } from './routes/mentor-espace'
 import { Route as MentorInvitationRouteImport } from './routes/mentor-invitation'
 import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
+import { Route as PresentationRouteImport } from './routes/presentation'
 import { Route as VoteAccesRouteImport } from './routes/vote-acces'
 import { Route as AuthenticatedAnalyseRouteImport } from './routes/_authenticated/analyse'
 import { Route as AuthenticatedArchivesRouteImport } from './routes/_authenticated/archives'
@@ -83,6 +84,11 @@ const MentorInvitationRoute = MentorInvitationRouteImport.update({
 const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
   id: '/mot-de-passe-oublie',
   path: '/mot-de-passe-oublie',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PresentationRoute = PresentationRouteImport.update({
+  id: '/presentation',
+  path: '/presentation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VoteAccesRoute = VoteAccesRouteImport.update({
@@ -271,6 +277,7 @@ export interface FileRoutesByFullPath {
   '/mentor-espace': typeof MentorEspaceRoute
   '/mentor-invitation': typeof MentorInvitationRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
+  '/presentation': typeof PresentationRoute
   '/vote-acces': typeof VoteAccesRoute
   '/analyse': typeof AuthenticatedAnalyseRoute
   '/archives': typeof AuthenticatedArchivesRoute
@@ -313,6 +320,7 @@ export interface FileRoutesByTo {
   '/mentor-espace': typeof MentorEspaceRoute
   '/mentor-invitation': typeof MentorInvitationRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
+  '/presentation': typeof PresentationRoute
   '/vote-acces': typeof VoteAccesRoute
   '/analyse': typeof AuthenticatedAnalyseRoute
   '/archives': typeof AuthenticatedArchivesRoute
@@ -357,6 +365,7 @@ export interface FileRoutesById {
   '/mentor-espace': typeof MentorEspaceRoute
   '/mentor-invitation': typeof MentorInvitationRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
+  '/presentation': typeof PresentationRoute
   '/vote-acces': typeof VoteAccesRoute
   '/_authenticated/analyse': typeof AuthenticatedAnalyseRoute
   '/_authenticated/archives': typeof AuthenticatedArchivesRoute
@@ -401,6 +410,7 @@ export interface FileRouteTypes {
     | '/mentor-espace'
     | '/mentor-invitation'
     | '/mot-de-passe-oublie'
+    | '/presentation'
     | '/vote-acces'
     | '/analyse'
     | '/archives'
@@ -443,6 +453,7 @@ export interface FileRouteTypes {
     | '/mentor-espace'
     | '/mentor-invitation'
     | '/mot-de-passe-oublie'
+    | '/presentation'
     | '/vote-acces'
     | '/analyse'
     | '/archives'
@@ -486,6 +497,7 @@ export interface FileRouteTypes {
     | '/mentor-espace'
     | '/mentor-invitation'
     | '/mot-de-passe-oublie'
+    | '/presentation'
     | '/vote-acces'
     | '/_authenticated/analyse'
     | '/_authenticated/archives'
@@ -530,6 +542,7 @@ export interface RootRouteChildren {
   MentorEspaceRoute: typeof MentorEspaceRoute
   MentorInvitationRoute: typeof MentorInvitationRoute
   MotDePasseOublieRoute: typeof MotDePasseOublieRoute
+  PresentationRoute: typeof PresentationRoute
   VoteAccesRoute: typeof VoteAccesRoute
   CastingSoumissionTokenRoute: typeof CastingSoumissionTokenRoute
   ReunionTokenRoute: typeof ReunionTokenRoute
@@ -585,6 +598,13 @@ declare module '@tanstack/react-router' {
       path: '/mot-de-passe-oublie'
       fullPath: '/mot-de-passe-oublie'
       preLoaderRoute: typeof MotDePasseOublieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/presentation': {
+      id: '/presentation'
+      path: '/presentation'
+      fullPath: '/presentation'
+      preLoaderRoute: typeof PresentationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vote-acces': {
@@ -905,6 +925,7 @@ const rootRouteChildren: RootRouteChildren = {
   MentorEspaceRoute: MentorEspaceRoute,
   MentorInvitationRoute: MentorInvitationRoute,
   MotDePasseOublieRoute: MotDePasseOublieRoute,
+  PresentationRoute: PresentationRoute,
   VoteAccesRoute: VoteAccesRoute,
   CastingSoumissionTokenRoute: CastingSoumissionTokenRoute,
   ReunionTokenRoute: ReunionTokenRoute,
