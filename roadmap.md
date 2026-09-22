@@ -20,6 +20,8 @@
 - [x] Dépôt de projet interne, étude à quatre, projets approuvés, budget prévisionnel, comptabilité reliée, corbeille, journal des e-mails, pilotage PG
 - [x] Mentor externe : logline + phase en lecture seule, bouton « Écrire au club » (PG/PD notifiés)
 - [x] Pastilles par rubrique qui diminuent dès consultation (état personnel user_seen)
+- [x] Restauration complète : données Excel importées, postes rattachés aux membres, rôles admin/mentor/bailleur, comptes recréés, outil technique temporaire supprimé
+
 - [ ] Bloquant : aucun domaine d'envoi configuré → aucun e-mail réel ne peut partir ni être testé vers tofac61@gmail.com
 - [ ] Avant mise en ligne : supprimer les 6 comptes de test @cinetremplin.test
 - [ ] En attente : étapes 2 et 3 du prompt « description des postes » (affichage/notification, formulaires)
