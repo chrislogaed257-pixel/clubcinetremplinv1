@@ -27,3 +27,7 @@
 - [ ] En attente : étapes 2 et 3 du prompt « description des postes » (affichage/notification, formulaires)
 
 - [x] Envoi d'e-mails : point d'envoi unique (mode aucun / gmail_smtp / domaine vérifié), boîte d'envoi, écran domaine, journal complet
+
+- [x] Rubriques par poste : table position_routes + onglet « Rubriques par poste », menu filtré ET accès direct bloqué (message clair + retour au tableau de bord), producteurs non restreints
+- [x] Rubriques recommandées pré-remplies pour les 45 postes (ajout seul, ON CONFLICT DO NOTHING)
+- [x] Fiche de présentation illustrée : page publique /presentation (3 images, imprimable), liée depuis l'accueil et l'onglet Guide
