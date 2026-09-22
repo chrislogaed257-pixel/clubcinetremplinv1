@@ -44,6 +44,12 @@ function OrgChartPage() {
     const positions = positionNamesOf(id, org.profilePositions, org.positions);
     const kids = childrenOf(id);
     const mine = projectsOf(id);
+    // Description de chaque poste occupé, reprise automatiquement des réglages « Postes ».
+    const positionDescriptions = org.profilePositions
+      .filter((pp) => pp.profile_id === id)
+      .map((pp) => org.positions.find((p) => p.id === pp.position_id))
+      .filter((p): p is (typeof org.positions)[number] => !!p && !!p.description)
+      .map((p) => `${p.name} : ${p.description}`);
 
     return (
       <div className="flex flex-col items-center">
