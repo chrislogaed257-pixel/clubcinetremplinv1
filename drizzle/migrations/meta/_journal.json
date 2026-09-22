@@ -71,6 +71,13 @@
       "when": 1790045918574,
       "tag": "0009_recreate_sandbox_exec_sql_helper",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790048236512,
+      "tag": "0010_drop_temp_sandbox_exec_helper",
+      "breakpoints": true
     }
   ]
 }

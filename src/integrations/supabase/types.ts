@@ -3431,7 +3431,6 @@ export type Database = {
         Returns: number
       }
       open_direct_conversation: { Args: { _other: string }; Returns: string }
-      sandbox_exec_sql: { Args: { q: string }; Returns: undefined }
       send_pending_reminders: { Args: never; Returns: number }
       submit_task_result: {
         Args: { _link: string; _task: string }
