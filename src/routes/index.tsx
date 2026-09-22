@@ -1,24 +1,39 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import logo from "@/assets/logo.png";
+import { Button } from "@/components/ui/button";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Club Ciné Tremplin — Espace membres" },
+      {
+        name: "description",
+        content:
+          "Outil interne du Club Ciné Tremplin : tâches, rapports, organigramme, liens et discussion de l'équipe.",
+      },
+      { property: "og:title", content: "Club Ciné Tremplin — Espace membres" },
+      {
+        property: "og:description",
+        content: "Suivi d'activité interne du Club Ciné Tremplin. On apprend, on tourne, on décolle.",
+      },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-4 text-center">
+      <img src={logo} alt="Club Ciné Tremplin" className="w-64 max-w-full" />
+      <p className="max-w-md text-sm text-muted-foreground">
+        Espace de suivi d'activité réservé aux membres du club. 
+
+
+        On apprend, on tourne, on décolle.
+      </p>
+      <Link to="/auth">
+        <Button size="lg">Se connecter</Button>
+      </Link>
     </div>
   );
 }

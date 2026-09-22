@@ -1,0 +1,259 @@
+import { PublicBrand } from "@/components/PublicBrand";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import {
+  castVote,
+  voteLogin,
+  voteOpen,
+  voteResults,
+  voteState,
+  type VoteProject,
+} from "@/lib/vote.functions";
+
+export const Route = createFileRoute("/vote-acces")({
+  component: VoteAccess,
+  head: () => ({
+    meta: [
+      { title: "Vote — Club Ciné Tremplin" },
+      {
+        name: "description",
+        content: "Espace de vote anonyme du Club Ciné Tremplin : identifiant et code de session.",
+      },
+      { property: "og:title", content: "Vote — Club Ciné Tremplin" },
+      {
+        property: "og:description",
+        content: "Espace de vote anonyme du Club Ciné Tremplin.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+});
+
+type Session = {
+  id: string;
+  title: string;
+  description: string;
+  max_votes: number;
+  require_distinct: boolean;
+  live_results: boolean;
+  closed_at: string | null;
+  proclamation: string;
+};
+
+function getToken() {
+  const key = "cct-vote-token";
+  let t = localStorage.getItem(key);
+  if (!t) {
+    t = crypto.randomUUID();
+    localStorage.setItem(key, t);
+  }
+  return t;
+}
+
+function VoteAccess() {
+  const [login, setLogin] = useState("");
+  const [code, setCode] = useState("");
+  const [session, setSession] = useState<Session | null>(null);
+  const [projects, setProjects] = useState<VoteProject[]>([]);
+  const [used, setUsed] = useState(0);
+  const [voted, setVoted] = useState<string[]>([]);
+  const [tally, setTally] = useState<{ code: string; votes: number }[]>([]);
+  const [total, setTotal] = useState(0);
+  const [busy, setBusy] = useState(false);
+
+  async function refreshResults(id: string) {
+    const r = await voteResults({ data: { sessionId: id } });
+    setTally(r.rows);
+    setTotal(r.total);
+  }
+
+  useEffect(() => {
+    if (!session || session.closed_at || !session.live_results) return;
+    const i = setInterval(() => void refreshResults(session.id), 5000);
+    return () => clearInterval(i);
+  }, [session]);
+
+  // Accès direct : le lien partagé (?t=jeton) ouvre le vote sans identifiant ni demande d'accès.
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("t");
+    if (!t) return;
+    void (async () => {
+      setBusy(true);
+      const res = await voteOpen({ data: { token: t } });
+      setBusy(false);
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      setSession(res.session as Session);
+      setProjects(res.projects);
+      const st = await voteState({ data: { sessionId: res.session.id, token: getToken() } });
+      setUsed(st.used);
+      setVoted(st.votedCodes);
+      void refreshResults(res.session.id);
+    })();
+  }, []);
+
+  async function submitLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const res = await voteLogin({ data: { login, code } });
+    setBusy(false);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    setSession(res.session as Session);
+    setProjects(res.projects);
+    const st = await voteState({ data: { sessionId: res.session.id, token: getToken() } });
+    setUsed(st.used);
+    setVoted(st.votedCodes);
+    void refreshResults(res.session.id);
+  }
+
+  async function vote(projectCode: string) {
+    if (!session) return;
+    setBusy(true);
+    const res = await castVote({
+      data: { sessionId: session.id, token: getToken(), code: projectCode },
+    });
+    setBusy(false);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    setUsed(res.used);
+    setVoted(res.votedCodes);
+    toast.success("Voix enregistrée");
+    void refreshResults(session.id);
+  }
+
+  if (!session) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+        <PublicBrand />
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle className="text-base">Vote : Club Ciné Tremplin</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form className="space-y-3" onSubmit={submitLogin}>
+              <div className="space-y-1.5">
+                <Label htmlFor="l">Identifiant du vote</Label>
+                <Input id="l" value={login} onChange={(e) => setLogin(e.target.value)} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="c">Code</Label>
+                <Input id="c" value={code} onChange={(e) => setCode(e.target.value)} required />
+              </div>
+              <Button type="submit" className="w-full" disabled={busy}>
+                Accéder au vote
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Votre vote est anonyme : aucun nom n'est enregistré.
+              </p>
+            </form>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
+  const closed = Boolean(session.closed_at);
+  const remaining = Math.max(0, session.max_votes - used);
+
+  return (
+    <main className="mx-auto max-w-2xl p-4">
+      <div className="sticky top-0 z-10 mb-4 rounded border border-border bg-background p-3">
+        <h1 className="text-base font-semibold text-primary">{session.title}</h1>
+        <p className="text-sm">
+          {closed ? "Vote clos" : `Voix restantes : ${remaining} / ${session.max_votes}`}
+        </p>
+      </div>
+
+      {!closed && (
+        <div className="space-y-3">
+          {projects.map((p) => {
+            const mine = voted.includes(p.code);
+            return (
+              <Card key={p.code}>
+                <CardContent className="space-y-2 p-4">
+                  <p className="font-mono text-lg font-semibold text-primary">{p.code}</p>
+                  {p.title && <p className="text-sm font-medium">{p.title}</p>}
+                  {p.description && (
+                    <p className="text-sm text-muted-foreground">{p.description}</p>
+                  )}
+                  <Button
+                    className="w-full"
+                    variant={mine ? "secondary" : "default"}
+                    disabled={busy || mine || remaining === 0}
+                    onClick={() => void vote(p.code)}
+                  >
+                    {mine ? "Voix utilisée" : remaining === 0 ? "Plus de voix" : "Voter"}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+          {projects.length === 0 && (
+            <p className="text-sm text-muted-foreground">Aucun projet soumis au vote.</p>
+          )}
+        </div>
+      )}
+
+      {!closed && remaining === 0 && (
+        <Card className="mt-4">
+          <CardContent className="space-y-3 p-4 text-sm">
+            <p className="font-medium">Merci pour votre participation.</p>
+            <p className="text-muted-foreground">
+              Vos voix sont enregistrées de façon anonyme. Les résultats seront annoncés lors de la
+              proclamation officielle.
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSession(null);
+                setProjects([]);
+                window.location.href = "/";
+              }}
+            >
+              Quitter
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {(closed || session.live_results) && (
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle className="text-sm">
+              {closed ? "Résultats" : "Chiffres en direct"} — {total} voix
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            {tally.map((r, i) => (
+              <div key={r.code} className="flex justify-between text-sm">
+                <span>
+                  {i + 1}. <span className="font-mono">{r.code}</span>
+                </span>
+                <span className="text-muted-foreground">{r.votes} voix</span>
+              </div>
+            ))}
+            {tally.length === 0 && (
+              <p className="text-sm text-muted-foreground">Aucune voix exprimée.</p>
+            )}
+            {closed && session.proclamation && (
+              <p className="pt-2 text-sm">{session.proclamation}</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </main>
+  );
+}
