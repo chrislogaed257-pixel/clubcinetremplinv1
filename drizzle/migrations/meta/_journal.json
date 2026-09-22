@@ -43,13 +43,6 @@
       "when": 1789821676820,
       "tag": "0005_enable_pgcrypto",
       "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1789821699830,
-      "tag": "0006_drop_temp_sandbox_exec_helper",
-      "breakpoints": true
     }
   ]
 }
