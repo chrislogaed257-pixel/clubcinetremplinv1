@@ -311,6 +311,14 @@ export function useOrgContext() {
     /** Tous les postes du membre, même quand un seul est actif. */
     allBasePositions,
     activePosition,
+    /** Fiche du poste utilisé en ce moment. */
+    activePositionRow,
+    /** Description du poste utilisé en ce moment (renseignée dans « Postes »). */
+    activePositionDescription,
+    positionRoutes,
+    /** Rubriques réservées au poste utilisé (vide = toutes). */
+    allowedRoutes,
+    routeAllowed,
     visibleIds,
     isDeputy: isAdmin || myBasePositions.includes("Producteur délégué"),
     isMentor: (me?.roles ?? []).includes("mentor"),
