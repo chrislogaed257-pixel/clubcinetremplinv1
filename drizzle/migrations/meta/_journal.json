@@ -43,6 +43,13 @@
       "when": 1789821676820,
       "tag": "0005_enable_pgcrypto",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790045787201,
+      "tag": "0006_bootstrap_grants_checkpoint",
+      "breakpoints": true
     }
   ]
 }
