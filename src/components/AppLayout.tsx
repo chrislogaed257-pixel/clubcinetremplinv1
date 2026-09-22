@@ -227,6 +227,37 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
     nav = nav.filter((i) => i.to === "/dashboard" || org.routeAllowed(i.to));
   }
 
+  // Rubriques concernées par le réglage « Rubriques par poste ».
+  // Les pages personnelles (fiche membre, changement de mot de passe…) ne sont jamais bloquées.
+  const GUARDED_ROUTES = [
+    "/taches",
+    "/rapports",
+    "/conges",
+    "/equipes",
+    "/organigramme",
+    "/ressources",
+    "/discussion",
+    "/messagerie",
+    "/reunions",
+    "/idees",
+    "/nouveau-projet",
+    "/projets-approuves",
+    "/budget-previsionnel",
+    "/comptabilite",
+    "/analyse",
+    "/contrats",
+    "/feuille-de-service",
+    "/festivals",
+    "/vote",
+    "/casting",
+    "/archives",
+  ];
+  const blockedByPosition =
+    org.allowedRoutes.length > 0 &&
+    !isGeneralProducer &&
+    GUARDED_ROUTES.includes(currentBase) &&
+    !org.routeAllowed(currentBase);
+
   // Six rubriques principales mises en avant en haut de l'écran.
   const MAIN_ROUTES = [
     "/dashboard",
@@ -445,7 +476,23 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
             </Button>
             <h1 className="text-2xl font-semibold">{t(title)}</h1>
           </div>
-          {children}
+          {blockedByPosition ? (
+            <div className="rounded border border-border bg-secondary/40 p-6 text-sm">
+              <p className="font-medium">Cette rubrique n'est pas prévue pour ce poste.</p>
+              <p className="mt-1 text-muted-foreground">
+                Vous utilisez le poste « {org.activePosition || org.myBasePositions[0] || "—"} ». Si
+                vous occupez plusieurs postes, changez de poste en haut de l'écran. Sinon,
+                demandez au Producteur général d'ouvrir cette rubrique à votre poste.
+              </p>
+              <Link to="/dashboard" className="mt-3 inline-block">
+                <Button size="sm" variant="outline">
+                  Retour au tableau de bord
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            children
+          )}
         </main>
       </div>
     </div>
