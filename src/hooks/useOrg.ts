@@ -128,6 +128,23 @@ export function useManagerLinks() {
 
 export type ManagerPositionLink = { id: string; profile_id: string; position_id: string };
 
+export type PositionRoute = { id: string; position_id: string; route: string };
+
+/** Rubriques autorisées pour chaque poste (réglées dans « Modifications »). */
+export function usePositionRoutes() {
+  return useQuery({
+    queryKey: ["position_routes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("position_routes")
+        .select("id, position_id, route");
+      if (error) throw error;
+      return (data ?? []) as PositionRoute[];
+    },
+    staleTime: 30000,
+  });
+}
+
 /** Supérieurs enregistrés comme poste (quand personne n'occupe encore ce poste). */
 export function useManagerPositionLinks() {
   return useQuery({
