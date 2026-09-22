@@ -50,6 +50,13 @@
       "when": 1790045787201,
       "tag": "0006_bootstrap_grants_checkpoint",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790045846225,
+      "tag": "0007_grant_auth_read_sandbox",
+      "breakpoints": true
     }
   ]
 }
