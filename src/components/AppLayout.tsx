@@ -221,6 +221,12 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
       }));
   }
 
+  // Rubriques réservées au poste utilisé en ce moment (réglage « Rubriques par poste »).
+  // Le tableau de bord reste toujours accessible.
+  if (org.allowedRoutes.length > 0 && !isGeneralProducer) {
+    nav = nav.filter((i) => i.to === "/dashboard" || org.routeAllowed(i.to));
+  }
+
   // Six rubriques principales mises en avant en haut de l'écran.
   const MAIN_ROUTES = [
     "/dashboard",
