@@ -252,6 +252,7 @@ function SettingsPage() {
           <TabsTrigger value="committee">Comité & rôles fonctionnels</TabsTrigger>
           <TabsTrigger value="brand">Identité visuelle</TabsTrigger>
           <TabsTrigger value="menu">Rubriques du menu</TabsTrigger>
+          <TabsTrigger value="position-routes">Rubriques par poste</TabsTrigger>
           <TabsTrigger value="database">Base de données</TabsTrigger>
           <TabsTrigger value="emails">Suivi des e-mails</TabsTrigger>
           <TabsTrigger value="trash">Corbeille</TabsTrigger>
