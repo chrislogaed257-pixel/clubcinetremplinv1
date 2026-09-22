@@ -1,0 +1,153 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789821548647,
+      "tag": "0000_grant_sandbox_exec_schema_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789821564078,
+      "tag": "0001_grant_sandbox_exec_auth_read",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789821599273,
+      "tag": "0002_reset_public_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789821632126,
+      "tag": "0003_grant_auth_usage_sandbox",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789821649609,
+      "tag": "0004_temp_sandbox_exec_sql_helper",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789821676820,
+      "tag": "0005_enable_pgcrypto",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789821699830,
+      "tag": "0006_drop_temp_sandbox_exec_helper",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789821752913,
+      "tag": "0007_general_producer_admin_rights",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789822005425,
+      "tag": "0008_ideas_reference_token_and_notifications",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789822023079,
+      "tag": "0009_audit_config_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789822044961,
+      "tag": "0010_fix_config_audit_function",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1789829072087,
+      "tag": "0011_positions_description",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789852816633,
+      "tag": "0012_change_log_and_schema_snapshot",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1789852869139,
+      "tag": "0013_internal_projects_budget_and_approval",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789852954740,
+      "tag": "0014_approve_project_edit",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1789864994133,
+      "tag": "0015_emails_projets_budget_mentor",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1789865060395,
+      "tag": "0016_notify_profiles_rpc",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1789866936814,
+      "tag": "0017_email_settings_and_outbox",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790003513815,
+      "tag": "0018_guide_registry_and_pitch",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790042102125,
+      "tag": "0019_open_direct_conversation",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790042891098,
+      "tag": "0020_manager_positions",
+      "breakpoints": true
+    }
+  ]
+}
