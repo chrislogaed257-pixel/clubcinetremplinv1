@@ -221,6 +221,12 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
       }));
   }
 
+  // Rubriques réservées au poste utilisé en ce moment (réglage « Rubriques par poste »).
+  // Le tableau de bord reste toujours accessible.
+  if (org.allowedRoutes.length > 0 && !isGeneralProducer) {
+    nav = nav.filter((i) => i.to === "/dashboard" || org.routeAllowed(i.to));
+  }
+
   // Six rubriques principales mises en avant en haut de l'écran.
   const MAIN_ROUTES = [
     "/dashboard",
@@ -369,11 +375,24 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
             ))}
           </nav>
           <div className="flex flex-wrap items-center gap-2 px-4 py-3 print:hidden">
-            <p className="mr-auto text-xs text-muted-foreground">
-              {me?.profile?.full_name}
-              {org.myPositions.length > 0 ? ` : ${org.myPositions.join(", ")}` : ""}
-              {me?.isAdmin ? " (admin)" : ""}
-            </p>
+            <div className="mr-auto min-w-0">
+              <p className="text-xs text-muted-foreground">
+                {me?.profile?.full_name}
+                {org.myPositions.length > 0 ? ` : ${org.myPositions.join(", ")}` : ""}
+                {me?.isAdmin ? " (admin)" : ""}
+              </p>
+              {org.myPositions.length > 1 && org.activePosition && (
+                <p className="text-xs">
+                  <span className="text-primary">Poste utilisé : {org.activePosition}</span>
+                  {org.activePositionDescription && (
+                    <span className="text-muted-foreground">
+                      {" "}
+                      — {org.activePositionDescription}
+                    </span>
+                  )}
+                </p>
+              )}
+            </div>
             <GlobalSearch />
             <PositionSwitcher myPositions={org.myPositions} />
             <NotificationsBell userId={me?.userId} />

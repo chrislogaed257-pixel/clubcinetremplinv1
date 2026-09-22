@@ -44,6 +44,12 @@ function OrgChartPage() {
     const positions = positionNamesOf(id, org.profilePositions, org.positions);
     const kids = childrenOf(id);
     const mine = projectsOf(id);
+    // Description de chaque poste occupé, reprise automatiquement des réglages « Postes ».
+    const positionDescriptions = org.profilePositions
+      .filter((pp) => pp.profile_id === id)
+      .map((pp) => org.positions.find((p) => p.id === pp.position_id))
+      .filter((p): p is (typeof org.positions)[number] => !!p && !!p.description)
+      .map((p) => `${p.name} : ${p.description}`);
 
     return (
       <div className="flex flex-col items-center">
@@ -57,6 +63,11 @@ function OrgChartPage() {
               {profile.role_description && (
                 <p className="text-xs text-muted-foreground">{profile.role_description}</p>
               )}
+              {positionDescriptions.map((d) => (
+                <p key={d} className="text-[11px] leading-tight text-muted-foreground">
+                  {d}
+                </p>
+              ))}
               {mine.length > 0 && (
                 <p className="text-[11px] text-muted-foreground">{mine.join(" · ")}</p>
               )}
@@ -101,6 +112,11 @@ function OrgChartPage() {
                   <CardContent className="space-y-1 p-3 text-center">
                     <p className="font-medium leading-tight text-primary">{position.name}</p>
                     <p className="text-xs text-muted-foreground">Poste sans titulaire</p>
+                    {position.description && (
+                      <p className="text-[11px] leading-tight text-muted-foreground">
+                        {position.description}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
                 {kids.length > 0 && (

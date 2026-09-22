@@ -24,6 +24,7 @@ import { FormFieldsSettings } from "@/components/FormFieldsSettings";
 import { CommitteeSettings } from "@/components/CommitteeSettings";
 import { BrandSettings } from "@/components/BrandSettings";
 import { MenuSettings } from "@/components/MenuSettings";
+import { PositionRoutesSettings } from "@/components/PositionRoutesSettings";
 import { DatabaseExport } from "@/components/DatabaseExport";
 import { EmailLogSettings } from "@/components/EmailLogSettings";
 import { EmailModeSettings } from "@/components/EmailModeSettings";
@@ -251,6 +252,7 @@ function SettingsPage() {
           <TabsTrigger value="committee">Comité & rôles fonctionnels</TabsTrigger>
           <TabsTrigger value="brand">Identité visuelle</TabsTrigger>
           <TabsTrigger value="menu">Rubriques du menu</TabsTrigger>
+          <TabsTrigger value="position-routes">Rubriques par poste</TabsTrigger>
           <TabsTrigger value="database">Base de données</TabsTrigger>
           <TabsTrigger value="emails">Suivi des e-mails</TabsTrigger>
           <TabsTrigger value="trash">Corbeille</TabsTrigger>
@@ -301,6 +303,10 @@ function SettingsPage() {
 
         <TabsContent value="menu" className="mt-6">
           <MenuSettings />
+        </TabsContent>
+
+        <TabsContent value="position-routes" className="mt-6">
+          <PositionRoutesSettings />
         </TabsContent>
 
         <TabsContent value="fields" className="mt-6">

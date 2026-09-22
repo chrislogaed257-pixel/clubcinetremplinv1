@@ -128,6 +128,23 @@ export function useManagerLinks() {
 
 export type ManagerPositionLink = { id: string; profile_id: string; position_id: string };
 
+export type PositionRoute = { id: string; position_id: string; route: string };
+
+/** Rubriques autorisées pour chaque poste (réglées dans « Modifications »). */
+export function usePositionRoutes() {
+  return useQuery({
+    queryKey: ["position_routes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("position_routes")
+        .select("id, position_id, route");
+      if (error) throw error;
+      return (data ?? []) as PositionRoute[];
+    },
+    staleTime: 30000,
+  });
+}
+
 /** Supérieurs enregistrés comme poste (quand personne n'occupe encore ce poste). */
 export function useManagerPositionLinks() {
   return useQuery({
@@ -241,6 +258,7 @@ export function useOrgContext() {
   const { data: categories = [] } = useCategories();
   const { data: profilePositions = [] } = useProfilePositions();
   const { data: links = [] } = useManagerLinks();
+  const { data: positionRoutes = [] } = usePositionRoutes();
   const activePosition = useActivePositionValue();
 
   const myId = me?.userId ?? "";
@@ -265,6 +283,18 @@ export function useOrgContext() {
       : subordinateIds(links, myId)
     : [];
 
+  // Poste actif : sa fiche et sa description suivent automatiquement le choix du membre.
+  const activePositionRow =
+    positions.find((p) => p.name === (restricted ? activeBase : allBasePositions[0])) ?? null;
+  const activePositionDescription = activePositionRow?.description ?? "";
+
+  // Rubriques réservées au poste choisi. Aucun réglage pour ce poste = tout reste visible.
+  const allowedRoutes = activePositionRow
+    ? positionRoutes.filter((r) => r.position_id === activePositionRow.id).map((r) => r.route)
+    : [];
+  const routeAllowed = (route: string) =>
+    allowedRoutes.length === 0 || allowedRoutes.includes(route);
+
   return {
     me,
     myId,
@@ -281,6 +311,14 @@ export function useOrgContext() {
     /** Tous les postes du membre, même quand un seul est actif. */
     allBasePositions,
     activePosition,
+    /** Fiche du poste utilisé en ce moment. */
+    activePositionRow,
+    /** Description du poste utilisé en ce moment (renseignée dans « Postes »). */
+    activePositionDescription,
+    positionRoutes,
+    /** Rubriques réservées au poste utilisé (vide = toutes). */
+    allowedRoutes,
+    routeAllowed,
     visibleIds,
     isDeputy: isAdmin || myBasePositions.includes("Producteur délégué"),
     isMentor: (me?.roles ?? []).includes("mentor"),
