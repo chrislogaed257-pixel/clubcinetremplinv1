@@ -112,6 +112,11 @@ function OrgChartPage() {
                   <CardContent className="space-y-1 p-3 text-center">
                     <p className="font-medium leading-tight text-primary">{position.name}</p>
                     <p className="text-xs text-muted-foreground">Poste sans titulaire</p>
+                    {position.description && (
+                      <p className="text-[11px] leading-tight text-muted-foreground">
+                        {position.description}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
                 {kids.length > 0 && (
