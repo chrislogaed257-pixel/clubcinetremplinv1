@@ -1866,6 +1866,35 @@ export type Database = {
         }
         Relationships: []
       }
+      position_routes: {
+        Row: {
+          created_at: string
+          id: string
+          position_id: string
+          route: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position_id: string
+          route: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position_id?: string
+          route?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "position_routes_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       positions: {
         Row: {
           active: boolean
