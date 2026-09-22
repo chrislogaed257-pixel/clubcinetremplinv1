@@ -63,6 +63,11 @@ function OrgChartPage() {
               {profile.role_description && (
                 <p className="text-xs text-muted-foreground">{profile.role_description}</p>
               )}
+              {positionDescriptions.map((d) => (
+                <p key={d} className="text-[11px] leading-tight text-muted-foreground">
+                  {d}
+                </p>
+              ))}
               {mine.length > 0 && (
                 <p className="text-[11px] text-muted-foreground">{mine.join(" · ")}</p>
               )}
