@@ -258,6 +258,7 @@ export function useOrgContext() {
   const { data: categories = [] } = useCategories();
   const { data: profilePositions = [] } = useProfilePositions();
   const { data: links = [] } = useManagerLinks();
+  const { data: positionRoutes = [] } = usePositionRoutes();
   const activePosition = useActivePositionValue();
 
   const myId = me?.userId ?? "";
