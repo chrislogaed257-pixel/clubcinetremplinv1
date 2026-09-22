@@ -283,6 +283,18 @@ export function useOrgContext() {
       : subordinateIds(links, myId)
     : [];
 
+  // Poste actif : sa fiche et sa description suivent automatiquement le choix du membre.
+  const activePositionRow =
+    positions.find((p) => p.name === (restricted ? activeBase : allBasePositions[0])) ?? null;
+  const activePositionDescription = activePositionRow?.description ?? "";
+
+  // Rubriques réservées au poste choisi. Aucun réglage pour ce poste = tout reste visible.
+  const allowedRoutes = activePositionRow
+    ? positionRoutes.filter((r) => r.position_id === activePositionRow.id).map((r) => r.route)
+    : [];
+  const routeAllowed = (route: string) =>
+    allowedRoutes.length === 0 || allowedRoutes.includes(route);
+
   return {
     me,
     myId,
