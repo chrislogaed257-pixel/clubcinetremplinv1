@@ -32,3 +32,5 @@
 - [x] Rubriques recommandées pré-remplies pour les 45 postes (ajout seul, ON CONFLICT DO NOTHING)
 - [x] Fiche de présentation illustrée : page publique /presentation (3 images, imprimable), liée depuis l'accueil et l'onglet Guide
 - [x] Vote public sur téléphone : lien publié sans authentification, ancien partage par identifiants retiré, parcours visiteur testé
+- [x] Opérations hébergées fiabilisées : connexion Cloud de secours pour les fonctions protégées, modification/suppression des membres vérifiées
+- [x] Vote : suivi chiffré privé actualisé toutes les 2 secondes pour le Producteur général

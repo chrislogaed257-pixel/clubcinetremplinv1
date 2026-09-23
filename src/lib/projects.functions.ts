@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCloudAuth } from "@/lib/cloud-auth";
 
 /** Postes autorisés à créer et supprimer un projet. */
 const ALLOWED_POSITIONS = [
@@ -51,7 +51,7 @@ async function assertAllowed(userId: string) {
  * afin qu'il suive le même parcours d'approbation que les propositions extérieures.
  */
 export const createProject = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCloudAuth])
   .inputValidator((d: CreateInput) => d)
   .handler(async ({ data, context }) => {
     const db = await assertAllowed(context.userId);
@@ -112,7 +112,7 @@ export const createProject = createServerFn({ method: "POST" })
 
 /** Supprime un projet ; l'idée liée est conservée mais détachée. */
 export const deleteProject = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCloudAuth])
   .inputValidator((d: { projectId: string }) => d)
   .handler(async ({ data, context }) => {
     const db = await assertAllowed(context.userId);

@@ -194,9 +194,10 @@ function MembersPage() {
 
   const save = useMutation({
     mutationFn: async () => {
+      if (!editingId) throw new Error("Choisissez le membre à modifier.");
       const res = await updateMember({
         data: {
-          id: editingId!,
+          id: editingId,
           email,
           fullName,
           positions,
@@ -209,7 +210,7 @@ function MembersPage() {
           roleDescription,
         },
       });
-      await saveManagerPositions(editingId!);
+      await saveManagerPositions(editingId);
       return res;
     },
     onSuccess: () => {
@@ -647,7 +648,16 @@ function MembersPage() {
                 <Button size="sm" variant="outline" onClick={() => startEdit(p.id)}>
                   Modifier
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => remove.mutate(p.id)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={remove.isPending}
+                  onClick={() => {
+                    if (window.confirm(`Supprimer définitivement le compte de ${p.full_name} ?`)) {
+                      remove.mutate(p.id);
+                    }
+                  }}
+                >
                   Supprimer
                 </Button>
               </CardContent>

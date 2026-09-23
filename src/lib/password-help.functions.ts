@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCloudAuth } from "@/lib/cloud-auth";
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -35,7 +35,7 @@ export type RequesterDetail = {
 
 /** Fiche complète des demandeurs : nom, poste et identifiant de connexion. */
 export const requesterDetails = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCloudAuth])
   .inputValidator((d: { requestIds: string[] }) => d)
   .handler(async ({ data, context }): Promise<RequesterDetail[]> => {
     await assertHelper(context as never);
@@ -98,7 +98,7 @@ function makePassword() {
  * afin que le producteur puisse le transmettre directement.
  */
 export const issueTemporaryPassword = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCloudAuth])
   .inputValidator((d: { requestId: string }) => d)
   .handler(async ({ data, context }) => {
     await assertHelper(context as never);
