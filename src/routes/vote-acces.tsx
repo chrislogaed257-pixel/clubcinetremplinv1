@@ -107,42 +107,70 @@ function VoteAccess() {
     return () => clearInterval(i);
   }, [session]);
 
-  // Accès direct : le lien partagé (?t=jeton) ouvre le vote sans identifiant ni demande d'accès.
-  useEffect(() => {
-    const t = new URLSearchParams(window.location.search).get("t");
-    if (!t) return;
-    void (async () => {
-      setBusy(true);
-      const res = await voteOpen({ data: { token: t } });
-      setBusy(false);
-      if (!res.ok) {
-        toast.error(res.error);
-        return;
+  async function loadSession(s: Session, list: VoteProject[]) {
+    setSession(s);
+    setProjects(list);
+    const st = await voteState({ data: { sessionId: s.id, token: getToken() } });
+    setUsed(st.used);
+    setVoted(st.votedCodes);
+    void refreshResults(s.id);
+  }
+
+  // Accès direct par lien : on affiche « Ouverture du vote… », et en cas de coupure
+  // réseau on réessaie deux fois avant d'afficher un message clair avec « Réessayer ».
+  async function openWithToken(t: string) {
+    setLinkError(null);
+    setOpening(true);
+    try {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const res = await voteOpen({ data: { token: t } });
+          if (!res.ok) {
+            setLinkError(res.error);
+            return;
+          }
+          await loadSession(res.session as Session, res.projects);
+          return;
+        } catch {
+          if (attempt === 2) {
+            setLinkError("Connexion interrompue. Vérifiez votre réseau puis réessayez.");
+            return;
+          }
+          await new Promise((r) => setTimeout(r, 700 * (attempt + 1)));
+        }
       }
-      setSession(res.session as Session);
-      setProjects(res.projects);
-      const st = await voteState({ data: { sessionId: res.session.id, token: getToken() } });
-      setUsed(st.used);
-      setVoted(st.votedCodes);
-      void refreshResults(res.session.id);
-    })();
+    } finally {
+      setOpening(false);
+    }
+  }
+
+  useEffect(() => {
+    const t = tokenFromLocation();
+    if (t) void openWithToken(t);
   }, []);
 
   async function submitLogin(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
-    const res = await voteLogin({ data: { login, code } });
-    setBusy(false);
-    if (!res.ok) {
-      toast.error(res.error);
+    // Beaucoup de votants collent le lien entier dans le champ « Identifiant » :
+    // on le reconnaît et on ouvre directement le vote au lieu de refuser l'accès.
+    const pasted = extractToken(login) ?? extractToken(code);
+    if (pasted) {
+      await openWithToken(pasted);
       return;
     }
-    setSession(res.session as Session);
-    setProjects(res.projects);
-    const st = await voteState({ data: { sessionId: res.session.id, token: getToken() } });
-    setUsed(st.used);
-    setVoted(st.votedCodes);
-    void refreshResults(res.session.id);
+    setBusy(true);
+    try {
+      const res = await voteLogin({ data: { login: login.trim(), code: code.trim() } });
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      await loadSession(res.session as Session, res.projects);
+    } catch {
+      toast.error("Connexion interrompue. Réessayez dans un instant.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function vote(projectCode: string) {
