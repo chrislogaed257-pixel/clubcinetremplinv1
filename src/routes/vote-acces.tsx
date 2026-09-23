@@ -190,6 +190,23 @@ function VoteAccess() {
     void refreshResults(session.id);
   }
 
+  if (!session && opening) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+        <PublicBrand />
+        <Card className="w-full max-w-sm">
+          <CardContent className="space-y-3 p-6 text-center">
+            <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-primary" />
+            <p className="text-sm font-medium">Ouverture du vote…</p>
+            <p className="text-xs text-muted-foreground">
+              Merci de patienter, ne fermez pas cette page.
+            </p>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
   if (!session) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
@@ -199,6 +216,26 @@ function VoteAccess() {
             <CardTitle className="text-base">Vote : Club Ciné Tremplin</CardTitle>
           </CardHeader>
           <CardContent>
+            {linkError && (
+              <div className="mb-3 space-y-2 rounded border border-destructive/40 bg-destructive/10 p-3">
+                <p className="text-sm font-medium text-destructive">{linkError}</p>
+                <p className="text-xs text-muted-foreground">
+                  Vous pouvez réessayer, ou entrer l'identifiant et le code communiqués par le
+                  Producteur général.
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const t = tokenFromLocation();
+                    if (t) void openWithToken(t);
+                    else setLinkError(null);
+                  }}
+                >
+                  Réessayer
+                </Button>
+              </div>
+            )}
             <form className="space-y-3" onSubmit={submitLogin}>
               <div className="space-y-1.5">
                 <Label htmlFor="l">Identifiant du vote</Label>
