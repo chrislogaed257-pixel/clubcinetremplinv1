@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
  * Vote anonyme. Tout passe par le serveur : les tables de quota (A) et de voix (B)
@@ -216,27 +215,3 @@ export const voteResults = createServerFn({ method: "POST" })
     return { rows, total: tallies?.length ?? 0, visible: true };
   });
 
-/** Résultats privés en direct, réservés au Producteur général. */
-export const producerVoteResults = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => resultsInput.parse(d))
-  .handler(async ({ data, context }) => {
-    const { data: allowed, error: accessError } = await context.supabase.rpc(
-      "is_admin_or_general_producer",
-      { _user_id: context.userId },
-    );
-    if (accessError || !allowed) throw new Error("Accès réservé au Producteur général.");
-
-    const { data: rows, error } = await context.supabase.rpc("vote_results", {
-      _session: data.sessionId,
-    });
-    if (error) throw new Error(error.message);
-    const counts = (rows ?? []).map((row) => ({
-      projectId: row.project_id,
-      votes: Number(row.votes ?? 0),
-    }));
-    return {
-      rows: counts,
-      total: counts.reduce((sum, row) => sum + row.votes, 0),
-    };
-  });

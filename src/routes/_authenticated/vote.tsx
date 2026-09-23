@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { downloadCsv, downloadTablePdf } from "@/lib/downloads";
-import { producerVoteResults, voteResults } from "@/lib/vote.functions";
+import { voteResults } from "@/lib/vote.functions";
 
 export const Route = createFileRoute("/_authenticated/vote")({
   component: VotePage,
@@ -209,7 +209,15 @@ function SessionCard({
     queryKey: ["vote_tally_producer", session.id],
     enabled: opened && isChief,
     refetchInterval: opened && !closed && isChief ? 2000 : false,
-    queryFn: async () => producerVoteResults({ data: { sessionId: session.id } }),
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("vote_results", { _session: session.id });
+      if (error) throw error;
+      const rows = (data ?? []).map((row) => ({
+        projectId: row.project_id,
+        votes: Number(row.votes ?? 0),
+      }));
+      return { rows, total: rows.reduce((sum, row) => sum + row.votes, 0) };
+    },
   });
 
   const addProject = useMutation({
