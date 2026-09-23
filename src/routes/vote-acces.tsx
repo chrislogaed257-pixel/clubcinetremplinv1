@@ -238,18 +238,19 @@ function VoteAccess() {
             )}
             <form className="space-y-3" onSubmit={submitLogin}>
               <div className="space-y-1.5">
-                <Label htmlFor="l">Identifiant du vote</Label>
-                <Input id="l" value={login} onChange={(e) => setLogin(e.target.value)} required />
+                <Label htmlFor="l">Identifiant du vote (ou lien reçu)</Label>
+                <Input id="l" value={login} onChange={(e) => setLogin(e.target.value)} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="c">Code</Label>
-                <Input id="c" value={code} onChange={(e) => setCode(e.target.value)} required />
+                <Input id="c" value={code} onChange={(e) => setCode(e.target.value)} />
               </div>
-              <Button type="submit" className="w-full" disabled={busy}>
-                Accéder au vote
+              <Button type="submit" className="w-full" disabled={busy || opening}>
+                {busy || opening ? "Ouverture…" : "Accéder au vote"}
               </Button>
               <p className="text-xs text-muted-foreground">
-                Votre vote est anonyme : aucun nom n'est enregistré.
+                Si vous avez reçu un lien de vote, vous pouvez aussi le coller dans le premier
+                champ. Votre vote est anonyme : aucun nom n'est enregistré.
               </p>
             </form>
           </CardContent>
