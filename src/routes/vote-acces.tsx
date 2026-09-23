@@ -10,6 +10,7 @@ import {
   castVote,
   voteLogin,
   voteOpen,
+  voteOpenCurrent,
   voteResults,
   voteState,
   type VoteProject,
@@ -118,13 +119,15 @@ function VoteAccess() {
 
   // Accès direct par lien : on affiche « Ouverture du vote… », et en cas de coupure
   // réseau on réessaie deux fois avant d'afficher un message clair avec « Réessayer ».
-  async function openWithToken(t: string) {
+  async function openWithToken(t: string | null) {
     setLinkError(null);
     setOpening(true);
     try {
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          const res = await voteOpen({ data: { token: t } });
+          // Sans jeton dans le lien, on ouvre directement le vote en cours :
+          // l'accès est libre, on ne demande ni identifiant ni code.
+          const res = t ? await voteOpen({ data: { token: t } }) : await voteOpenCurrent();
           if (!res.ok) {
             setLinkError(res.error);
             return;
@@ -145,8 +148,7 @@ function VoteAccess() {
   }
 
   useEffect(() => {
-    const t = tokenFromLocation();
-    if (t) void openWithToken(t);
+    void openWithToken(tokenFromLocation());
   }, []);
 
   async function submitLogin(e: React.FormEvent) {
@@ -230,11 +232,7 @@ function VoteAccess() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => {
-                    const t = tokenFromLocation();
-                    if (t) void openWithToken(t);
-                    else setLinkError(null);
-                  }}
+                  onClick={() => void openWithToken(tokenFromLocation())}
                 >
                   Réessayer
                 </Button>

@@ -62,6 +62,31 @@ export const voteOpen = createServerFn({ method: "POST" })
     return { ok: true as const, session, projects: (projects ?? []) as VoteProject[] };
   });
 
+/**
+ * Accès totalement libre : aucun identifiant, aucun code, aucun jeton.
+ * On ouvre simplement le vote en cours (le plus récemment ouvert et non clos).
+ */
+export const voteOpenCurrent = createServerFn({ method: "POST" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const cols =
+    "id, title, description, status, max_votes, require_distinct, live_results, individual_codes, opened_at, closed_at, proclamation";
+  const { data: sessions } = await supabaseAdmin
+    .from("vote_sessions")
+    .select(cols)
+    .not("opened_at", "is", null)
+    .is("closed_at", null)
+    .order("opened_at", { ascending: false })
+    .limit(1);
+  const session = sessions?.[0];
+  if (!session) return { ok: false as const, error: "Aucun vote n'est ouvert pour le moment." };
+  const { data: projects } = await supabaseAdmin
+    .from("vote_projects")
+    .select("code, title, description")
+    .eq("session_id", session.id)
+    .order("sort_order");
+  return { ok: true as const, session, projects: (projects ?? []) as VoteProject[] };
+});
+
 const stateInput = z.object({ sessionId: z.string().uuid(), token: z.string().min(8) });
 
 async function readState(sessionId: string, token: string) {
