@@ -34,3 +34,4 @@
 - [x] Vote public sur téléphone : lien publié sans authentification, ancien partage par identifiants retiré, parcours visiteur testé
 - [x] Opérations hébergées fiabilisées : connexion Cloud de secours pour les fonctions protégées, modification/suppression des membres vérifiées
 - [x] Vote : suivi chiffré privé actualisé toutes les 2 secondes pour le Producteur général
+- [x] Types de la base régénérés : plus aucune erreur de compilation (269 → 0), enregistrement d'une fiche membre et écran Vote testés sans erreur
