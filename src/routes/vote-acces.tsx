@@ -56,9 +56,37 @@ function getToken() {
   return t;
 }
 
+/**
+ * Un lien de vote peut arriver sous plusieurs formes selon la façon dont il a été
+ * partagé (copie partielle, ajout d'espaces, lien collé dans une messagerie qui
+ * remplace « ? » ou « & », lien recollé en entier dans le champ identifiant).
+ * On récupère le jeton dans tous ces cas plutôt que de retomber sur le formulaire.
+ */
+function extractToken(raw: string): string | null {
+  const s = (raw ?? "").trim();
+  if (!s) return null;
+  const direct = s.match(/[?&#](?:t|token)=([A-Za-z0-9-]{8,})/);
+  if (direct) return direct[1];
+  const bare = s.match(/^(?:t|token)[=:]?\s*([A-Za-z0-9-]{8,})$/i);
+  if (bare) return bare[1];
+  if (/^[A-Za-z0-9]{24,}$/.test(s)) return s;
+  const tail = s.match(/\/vote-acces\/?([A-Za-z0-9-]{24,})$/);
+  if (tail) return tail[1];
+  return null;
+}
+
+function tokenFromLocation(): string | null {
+  const url = new URL(window.location.href);
+  const q = url.searchParams.get("t") ?? url.searchParams.get("token");
+  if (q && q.trim()) return q.trim();
+  return extractToken(url.hash) ?? extractToken(window.location.href);
+}
+
 function VoteAccess() {
   const [login, setLogin] = useState("");
   const [code, setCode] = useState("");
+  const [opening, setOpening] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [projects, setProjects] = useState<VoteProject[]>([]);
   const [used, setUsed] = useState(0);
