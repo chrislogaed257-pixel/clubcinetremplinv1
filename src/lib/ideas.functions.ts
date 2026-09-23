@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCloudAuth } from "@/lib/supabase-auth";
 
 type Submission = {
   name: string;
@@ -87,7 +87,7 @@ export const submitIdea = createServerFn({ method: "POST" })
 
 /** Lien de téléchargement temporaire du fichier d'une idée. */
 export const getIdeaFileLink = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCloudAuth])
   .inputValidator((d: { ideaId: string }) => d)
   .handler(async ({ data, context }) => {
     const { data: idea, error } = await context.supabase
@@ -216,7 +216,7 @@ export const submitIdeaFull = createServerFn({ method: "POST" })
  * Le parcours de vote existant reste inchangé.
  */
 export const approveIdeaAsProducer = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCloudAuth])
   .inputValidator((d: { ideaId: string }) => d)
   .handler(async ({ data, context }) => {
     const db = await admin();

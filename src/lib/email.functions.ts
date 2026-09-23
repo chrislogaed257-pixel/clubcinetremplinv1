@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCloudAuth } from "@/lib/supabase-auth";
 
 /**
  * Point d'envoi unique de l'application.
@@ -18,7 +18,7 @@ export type SendResult = {
 };
 
 export const sendAppEmail = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCloudAuth])
   .inputValidator(
     (input: {
       recipient: string;

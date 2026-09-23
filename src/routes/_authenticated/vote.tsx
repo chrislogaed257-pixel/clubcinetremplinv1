@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { downloadCsv, downloadTablePdf } from "@/lib/downloads";
-import { voteResults } from "@/lib/vote.functions";
+import { producerVoteResults, voteResults } from "@/lib/vote.functions";
 
 export const Route = createFileRoute("/_authenticated/vote")({
   component: VotePage,
@@ -205,6 +205,13 @@ function SessionCard({
     queryFn: async () => voteResults({ data: { sessionId: session.id } }),
   });
 
+  const producerResults = useQuery({
+    queryKey: ["vote_tally_producer", session.id],
+    enabled: opened && isChief,
+    refetchInterval: opened && !closed && isChief ? 2000 : false,
+    queryFn: async () => producerVoteResults({ data: { sessionId: session.id } }),
+  });
+
   const addProject = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("vote_projects").insert({
@@ -276,6 +283,8 @@ function SessionCard({
   const voteUrl = "https://clubcinetremplinv1.lovable.app/vote-acces";
   const titleOf = (c: string) => (projects.data ?? []).find((p) => p.code === c)?.title ?? "";
   const ranked = results.data?.rows ?? [];
+  const privateRanked = [...(producerResults.data?.rows ?? [])].sort((a, b) => b.votes - a.votes);
+  const projectById = (id: string) => (projects.data ?? []).find((p) => p.id === id);
 
   return (
     <Card>
@@ -502,6 +511,49 @@ function SessionCard({
                   Télécharger (CSV)
                 </Button>
               </div>
+            )}
+          </div>
+        )}
+
+        {opened && isChief && (
+          <div className="space-y-2 rounded border border-border p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase text-muted-foreground">
+                Suivi privé du Producteur général
+              </p>
+              <span className="text-sm font-medium">
+                {producerResults.data?.total ?? 0} voix exprimées
+              </span>
+            </div>
+            {producerResults.isPending && (
+              <p className="text-sm text-muted-foreground">Actualisation des chiffres…</p>
+            )}
+            {producerResults.isError && (
+              <p className="text-sm text-destructive">
+                Les chiffres n'ont pas pu être actualisés. Une nouvelle tentative est automatique.
+              </p>
+            )}
+            {privateRanked.map((row, index) => {
+              const project = projectById(row.projectId);
+              return (
+                <div key={row.projectId} className="flex items-center gap-3 text-sm">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-secondary font-semibold">
+                    {index + 1}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate">
+                    {project?.code ? `${project.code} — ` : ""}{project?.title || "Projet"}
+                  </span>
+                  <span className="font-semibold">{row.votes} voix</span>
+                </div>
+              );
+            })}
+            {!producerResults.isPending && privateRanked.length === 0 && (
+              <p className="text-sm text-muted-foreground">Aucune voix exprimée.</p>
+            )}
+            {!closed && (
+              <p className="text-[11px] text-muted-foreground">
+                Chiffres confidentiels, actualisés automatiquement toutes les deux secondes.
+              </p>
             )}
           </div>
         )}
