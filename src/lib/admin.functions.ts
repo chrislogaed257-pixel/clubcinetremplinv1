@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireCloudAuth } from "@/lib/supabase-auth";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type PositionAssignment = { positionId: string; rank: string };
 
@@ -257,7 +257,7 @@ export const bootstrapAdmin = createServerFn({ method: "POST" })
   });
 
 export const createMember = createServerFn({ method: "POST" })
-  .middleware([requireCloudAuth])
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: MemberInput) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -291,7 +291,7 @@ export const createMember = createServerFn({ method: "POST" })
   });
 
 export const updateMember = createServerFn({ method: "POST" })
-  .middleware([requireCloudAuth])
+  .middleware([requireSupabaseAuth])
   .inputValidator(
     (d: {
       id: string;
@@ -350,7 +350,7 @@ export const updateMember = createServerFn({ method: "POST" })
   });
 
 export const deleteMember = createServerFn({ method: "POST" })
-  .middleware([requireCloudAuth])
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -389,7 +389,7 @@ function randomPassword() {
 
 /** Génère un nouveau mot de passe pour un membre et le renvoie une seule fois. */
 export const resetMemberPassword = createServerFn({ method: "POST" })
-  .middleware([requireCloudAuth])
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string; forceChange: boolean }) => d)
   .handler(async ({ data, context }) => {
     await assertProducer(context);
@@ -406,7 +406,7 @@ export const resetMemberPassword = createServerFn({ method: "POST" })
 
 /** Force (ou annule) le changement de mot de passe à la prochaine connexion. */
 export const setMustChangePassword = createServerFn({ method: "POST" })
-  .middleware([requireCloudAuth])
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string; value: boolean }) => d)
   .handler(async ({ data, context }) => {
     await assertProducer(context);
@@ -421,7 +421,7 @@ export const setMustChangePassword = createServerFn({ method: "POST" })
 
 /** Désactive ou réactive un compte sans supprimer aucune donnée. */
 export const setMemberActive = createServerFn({ method: "POST" })
-  .middleware([requireCloudAuth])
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string; active: boolean }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);

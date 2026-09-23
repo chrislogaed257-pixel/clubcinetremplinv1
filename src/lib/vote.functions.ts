@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireCloudAuth } from "@/lib/supabase-auth";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
  * Vote anonyme. Tout passe par le serveur : les tables de quota (A) et de voix (B)
@@ -218,7 +218,7 @@ export const voteResults = createServerFn({ method: "POST" })
 
 /** Résultats privés en direct, réservés au Producteur général. */
 export const producerVoteResults = createServerFn({ method: "POST" })
-  .middleware([requireCloudAuth])
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => resultsInput.parse(d))
   .handler(async ({ data, context }) => {
     const { data: allowed, error: accessError } = await context.supabase.rpc(
