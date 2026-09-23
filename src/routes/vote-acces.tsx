@@ -2,13 +2,10 @@ import { PublicBrand } from "@/components/PublicBrand";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
   castVote,
-  voteLogin,
   voteOpen,
   voteOpenCurrent,
   voteResults,
@@ -84,8 +81,6 @@ function tokenFromLocation(): string | null {
 }
 
 function VoteAccess() {
-  const [login, setLogin] = useState("");
-  const [code, setCode] = useState("");
   const [opening, setOpening] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -151,34 +146,6 @@ function VoteAccess() {
     void openWithToken(tokenFromLocation());
   }, []);
 
-  async function submitLogin(e: React.FormEvent) {
-    e.preventDefault();
-    // Beaucoup de votants collent le lien entier dans le champ « Identifiant » :
-    // on le reconnaît et on ouvre directement le vote au lieu de refuser l'accès.
-    const pasted = extractToken(login) ?? extractToken(code);
-    if (pasted) {
-      await openWithToken(pasted);
-      return;
-    }
-    if (!login.trim() || !code.trim()) {
-      toast.error("Entrez l'identifiant et le code du vote, ou collez le lien reçu.");
-      return;
-    }
-    setBusy(true);
-    try {
-      const res = await voteLogin({ data: { login: login.trim(), code: code.trim() } });
-      if (!res.ok) {
-        toast.error(res.error);
-        return;
-      }
-      await loadSession(res.session as Session, res.projects);
-    } catch {
-      toast.error("Connexion interrompue. Réessayez dans un instant.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   async function vote(projectCode: string) {
     if (!session) return;
     setBusy(true);
@@ -221,40 +188,21 @@ function VoteAccess() {
           <CardHeader>
             <CardTitle className="text-base">Vote : Club Ciné Tremplin</CardTitle>
           </CardHeader>
-          <CardContent>
-            {linkError && (
-              <div className="mb-3 space-y-2 rounded border border-destructive/40 bg-destructive/10 p-3">
-                <p className="text-sm font-medium text-destructive">{linkError}</p>
-                <p className="text-xs text-muted-foreground">
-                  Vous pouvez réessayer, ou entrer l'identifiant et le code communiqués par le
-                  Producteur général.
-                </p>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => void openWithToken(tokenFromLocation())}
-                >
-                  Réessayer
-                </Button>
-              </div>
-            )}
-            <form className="space-y-3" onSubmit={submitLogin}>
-              <div className="space-y-1.5">
-                <Label htmlFor="l">Identifiant du vote (ou lien reçu)</Label>
-                <Input id="l" value={login} onChange={(e) => setLogin(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="c">Code</Label>
-                <Input id="c" value={code} onChange={(e) => setCode(e.target.value)} />
-              </div>
-              <Button type="submit" className="w-full" disabled={busy || opening}>
-                {busy || opening ? "Ouverture…" : "Accéder au vote"}
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                Si vous avez reçu un lien de vote, vous pouvez aussi le coller dans le premier
-                champ. Votre vote est anonyme : aucun nom n'est enregistré.
-              </p>
-            </form>
+          <CardContent className="space-y-3">
+            <p className="text-sm font-medium text-destructive">
+              {linkError ?? "Aucun vote n'est ouvert pour le moment."}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              L'accès est libre et ne demande aucun compte. Réessayez lorsque le vote est ouvert.
+            </p>
+            <Button
+              className="w-full"
+              variant="outline"
+              disabled={opening}
+              onClick={() => void openWithToken(tokenFromLocation())}
+            >
+              {opening ? "Ouverture…" : "Réessayer"}
+            </Button>
           </CardContent>
         </Card>
       </main>
