@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -271,8 +271,9 @@ function SessionCard({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const voteUrl =
-    typeof window === "undefined" ? "" : `${window.location.origin}/vote-acces`;
+  // Toujours partager le site public : une adresse d'aperçu Lovable demande
+  // l'autorisation du propriétaire sur les téléphones des votants.
+  const voteUrl = "https://clubcinetremplinv1.lovable.app/vote-acces";
   const titleOf = (c: string) => (projects.data ?? []).find((p) => p.code === c)?.title ?? "";
   const ranked = results.data?.rows ?? [];
 
@@ -341,42 +342,20 @@ function SessionCard({
       <CardContent className="space-y-4">
         {canManage && (
           <div className="rounded border border-border p-3 text-sm">
-            <p className="font-medium">Accès des votants</p>
+            <p className="font-medium">Lien public du vote</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Identifiant : <span className="font-mono">{session.access_login}</span> · Code :{" "}
-              <span className="font-mono">{session.access_code}</span>
+              Toute personne qui reçoit ce lien entre directement dans le vote, sans compte ni
+              authentification.
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => copy(`${session.access_login} / ${session.access_code}`, "Identifiants")}
-              >
-                Copier
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  copy(
-                    `${voteUrl}\nIdentifiant : ${session.access_login}\nCode : ${session.access_code}`,
-                    "Lien + identifiants",
-                  )
-                }
-              >
-                Copier le lien + identifiants
-              </Button>
               {session.public_token && (
                 <Button
                   size="sm"
-                  onClick={() => copy(`${voteUrl}?t=${session.public_token}`, "Lien d'accès direct")}
+                  onClick={() => copy(`${voteUrl}?t=${session.public_token}`, "Lien public du vote")}
                 >
-                  Copier le lien d'accès direct
+                  Copier le lien public
                 </Button>
               )}
-              <Button size="sm" variant="ghost" asChild>
-                <Link to="/vote-acces">Ouvrir la page de vote</Link>
-              </Button>
             </div>
           </div>
         )}
