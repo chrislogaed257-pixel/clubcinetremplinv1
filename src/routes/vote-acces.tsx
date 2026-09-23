@@ -10,6 +10,7 @@ import {
   castVote,
   voteLogin,
   voteOpen,
+  voteOpenCurrent,
   voteResults,
   voteState,
   type VoteProject,
