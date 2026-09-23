@@ -31,3 +31,4 @@
 - [x] Rubriques par poste : table position_routes + onglet « Rubriques par poste », menu filtré ET accès direct bloqué (message clair + retour au tableau de bord), producteurs non restreints
 - [x] Rubriques recommandées pré-remplies pour les 45 postes (ajout seul, ON CONFLICT DO NOTHING)
 - [x] Fiche de présentation illustrée : page publique /presentation (3 images, imprimable), liée depuis l'accueil et l'onglet Guide
+- [ ] Vote public sur téléphone : lien publié sans authentification, ancien partage par identifiants retiré, parcours visiteur testé
