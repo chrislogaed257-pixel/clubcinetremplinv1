@@ -232,11 +232,7 @@ function VoteAccess() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => {
-                    const t = tokenFromLocation();
-                    if (t) void openWithToken(t);
-                    else setLinkError(null);
-                  }}
+                  onClick={() => void openWithToken(tokenFromLocation())}
                 >
                   Réessayer
                 </Button>
