@@ -148,8 +148,7 @@ function VoteAccess() {
   }
 
   useEffect(() => {
-    const t = tokenFromLocation();
-    if (t) void openWithToken(t);
+    void openWithToken(tokenFromLocation());
   }, []);
 
   async function submitLogin(e: React.FormEvent) {
