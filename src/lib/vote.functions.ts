@@ -167,8 +167,41 @@ export const voteResults = createServerFn({ method: "POST" })
       .eq("id", data.sessionId)
       .maybeSingle();
     if (!session) return { rows: [], total: 0, visible: false };
+    
     const closed = Boolean(session.closed_at);
-    if (!closed && !session.live_results) return { rows: [], total: 0, visible: false };
+    let visible = closed || session.live_results;
+
+    // Le Producteur général et les administrateurs voient toujours les chiffres en direct.
+    if (!visible) {
+      try {
+        const { getRequest } = await import("@tanstack/react-start/server");
+        const request = getRequest();
+        const auth = request?.headers.get("authorization");
+        if (auth?.startsWith("Bearer ")) {
+          const token = auth.replace("Bearer ", "");
+          const { createClient } = await import("@supabase/supabase-js");
+          const url = process.env["SUPABASE_URL"];
+          const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
+          if (url && key) {
+            const client = createClient(url, key, {
+              global: { headers: { Authorization: `Bearer ${token}` } },
+            });
+            const { data: { user } } = await client.auth.getUser();
+            if (user) {
+              const { data: allowed } = await client.rpc("is_admin_or_general_producer", {
+                _user_id: user.id,
+              });
+              if (allowed) visible = true;
+            }
+          }
+        }
+      } catch {
+        // Ignorer en cas d'erreur d'authentification
+      }
+    }
+
+    if (!visible) return { rows: [], total: 0, visible: false };
+    
     const { data: tallies } = await supabaseAdmin
       .from("vote_tallies")
       .select("project_code")
