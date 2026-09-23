@@ -43,9 +43,9 @@ function createSupabaseAdminClient() {
     // throw new Error(message);
   }
 
-  return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  return createClient<Database>(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!, {
     global: {
-      fetch: createSupabaseFetch(SUPABASE_SERVICE_ROLE_KEY),
+      fetch: createSupabaseFetch(SUPABASE_SERVICE_ROLE_KEY!),
     },
     auth: {
       storage: undefined,
