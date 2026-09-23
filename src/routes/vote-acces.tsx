@@ -158,6 +158,10 @@ function VoteAccess() {
       await openWithToken(pasted);
       return;
     }
+    if (!login.trim() || !code.trim()) {
+      toast.error("Entrez l'identifiant et le code du vote, ou collez le lien reçu.");
+      return;
+    }
     setBusy(true);
     try {
       const res = await voteLogin({ data: { login: login.trim(), code: code.trim() } });
