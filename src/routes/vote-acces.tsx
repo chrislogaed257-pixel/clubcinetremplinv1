@@ -66,12 +66,12 @@ function extractToken(raw: string): string | null {
   const s = (raw ?? "").trim();
   if (!s) return null;
   const direct = s.match(/[?&#](?:t|token)=([A-Za-z0-9-]{8,})/);
-  if (direct) return direct[1];
+  if (direct) return direct[1] ?? null;
   const bare = s.match(/^(?:t|token)[=:]?\s*([A-Za-z0-9-]{8,})$/i);
-  if (bare) return bare[1];
+  if (bare) return bare[1] ?? null;
   if (/^[A-Za-z0-9]{24,}$/.test(s)) return s;
   const tail = s.match(/\/vote-acces\/?([A-Za-z0-9-]{24,})$/);
-  if (tail) return tail[1];
+  if (tail) return tail[1] ?? null;
   return null;
 }
 
