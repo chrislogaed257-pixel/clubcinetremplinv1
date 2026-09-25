@@ -3466,12 +3466,30 @@ export type Database = {
         Returns: string
       }
       sync_schema_snapshot: { Args: never; Returns: number }
+      vote_producer_results: { Args: { _session: string }; Returns: Json }
+      vote_public_cast: {
+        Args: { _code: string; _session: string; _token: string }
+        Returns: Json
+      }
+      vote_public_open: {
+        Args: { _code?: string; _login?: string; _token: string }
+        Returns: Json
+      }
+      vote_public_results: { Args: { _session: string }; Returns: Json }
+      vote_public_state: {
+        Args: { _session: string; _token: string }
+        Returns: Json
+      }
       vote_results: {
         Args: { _session: string }
         Returns: {
           project_id: string
           votes: number
         }[]
+      }
+      vote_session_payload: {
+        Args: { _s: Database["public"]["Tables"]["vote_sessions"]["Row"] }
+        Returns: Json
       }
     }
     Enums: {

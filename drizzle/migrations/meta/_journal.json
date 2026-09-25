@@ -92,6 +92,13 @@
       "when": 1790074758958,
       "tag": "0012_seed_position_routes_defaults",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790323794169,
+      "tag": "0013_vote_public_rpcs",
+      "breakpoints": true
     }
   ]
 }
