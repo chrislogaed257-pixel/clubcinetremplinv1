@@ -258,6 +258,18 @@ function MembersPage() {
     setDislikes(p.dislikes ?? "");
     setPassword("");
     setRole("member");
+    // On reprend le niveau d'accès déjà enregistré pour ne pas le perdre.
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", id)
+      .then(({ data }) => {
+        const roles = (data ?? []).map((r) => r.role as Role);
+        const kept =
+          (["admin", "mentor", "funder", "member"] as Role[]).find((r) => roles.includes(r)) ??
+          "member";
+        setRole(kept);
+      });
     setPositions(
       org.profilePositions
         .filter((pp) => pp.profile_id === id)
