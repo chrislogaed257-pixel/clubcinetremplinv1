@@ -8,6 +8,7 @@ import { Chat, useConversation } from "@/components/Chat";
 import { ProjectPhaseControl } from "@/components/ProjectPhase";
 import { getIdeaFileLink, approveIdeaAsProducer } from "@/lib/ideas.functions";
 import { createProject, deleteProject } from "@/lib/projects.functions";
+import { FicheEditor } from "./projets-approuves";
 import { sendClubMail } from "@/lib/club-email";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -156,6 +157,7 @@ function IdeasPage() {
       const { data, error } = await supabase
         .from("projects")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Project[];
@@ -726,6 +728,10 @@ function IdeasPage() {
                     </div>
                   </div>
                 )}
+                {(org.isAdmin ||
+                  ["Producteur général", "Producteur délégué", "Scénariste"].some((x) =>
+                    org.myBasePositions.includes(x),
+                  )) && <FicheEditor project={p as never} />}
                 <LoglineEditor projectId={p.id} canEdit={org.isAdmin || org.isDeputy} />
                 <ProjectEdits
                   projectId={p.id}
