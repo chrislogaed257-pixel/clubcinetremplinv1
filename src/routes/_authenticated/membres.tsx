@@ -50,6 +50,7 @@ function MembersPage() {
   const [projectIds, setProjectIds] = useState<string[]>([]);
   const [posQuery, setPosQuery] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingLoadingId, setEditingLoadingId] = useState<string | null>(null);
   const [roleDescription, setRoleDescription] = useState("");
   /** Vrai dès que la description a été retouchée à la main : on cesse alors de la remplir seul. */
   const [descTouched, setDescTouched] = useState(false);
@@ -246,52 +247,79 @@ function MembersPage() {
   });
 
 
-  function startEdit(id: string) {
+  async function startEdit(id: string) {
     const p = org.profiles.find((x) => x.id === id);
     if (!p) return;
-    setEditingId(id);
-    setFullName(p.full_name);
-    setEmail(p.email ?? "");
-    setRoleDescription(p.role_description ?? "");
-    setDescTouched(!!(p.role_description ?? "").trim());
-    setLikes(p.likes ?? "");
-    setDislikes(p.dislikes ?? "");
-    setPassword("");
-    setRole("member");
-    // On reprend le niveau d'accès déjà enregistré pour ne pas le perdre.
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", id)
-      .then(({ data }) => {
-        const roles = (data ?? []).map((r) => r.role as Role);
-        const kept =
-          (["admin", "mentor", "funder", "member"] as Role[]).find((r) => roles.includes(r)) ??
-          "member";
-        setRole(kept);
+    setEditingLoadingId(id);
+    try {
+      // Lecture directe de toute la fiche : sur un hébergement plus lent, les listes générales
+      // peuvent ne pas être prêtes au clic et faisaient alors apparaître des cases vides.
+      const [rolesResult, positionsResult, managersResult, managerPositionsResult, projectsResult] =
+        await Promise.all([
+          supabase.from("user_roles").select("role").eq("user_id", id),
+          supabase
+            .from("profile_positions")
+            .select("position_id, rank_label")
+            .eq("profile_id", id),
+          supabase.from("profile_managers").select("manager_id").eq("profile_id", id),
+          supabase
+            .from("profile_manager_positions")
+            .select("position_id")
+            .eq("profile_id", id),
+          supabase.from("project_members").select("project_id").eq("profile_id", id),
+        ]);
+
+      const loadError = [
+        rolesResult.error,
+        positionsResult.error,
+        managersResult.error,
+        managerPositionsResult.error,
+        projectsResult.error,
+      ].find(Boolean);
+      if (loadError) throw new Error(loadError.message);
+
+      const savedRoles = (rolesResult.data ?? []).map((row) => row.role as Role);
+      const savedRole =
+        (["admin", "mentor", "funder", "member"] as Role[]).find((item) =>
+          savedRoles.includes(item),
+        ) ?? "member";
+
+      // Le formulaire n'est remplacé qu'une fois toutes les anciennes valeurs reçues.
+      setEditingId(id);
+      setFullName(p.full_name);
+      setEmail(p.email ?? "");
+      setRoleDescription(p.role_description ?? "");
+      setDescTouched(!!(p.role_description ?? "").trim());
+      setLikes(p.likes ?? "");
+      setDislikes(p.dislikes ?? "");
+      setPassword("");
+      setRole(savedRole);
+      setPositions(
+        (positionsResult.data ?? []).map((row) => ({
+          positionId: row.position_id,
+          rank: row.rank_label ?? "",
+        })),
+      );
+      setManagerIds((managersResult.data ?? []).map((row) => row.manager_id));
+      setManagerPositionIds(
+        (managerPositionsResult.data ?? []).map((row) => row.position_id),
+      );
+      setProjectIds((projectsResult.data ?? []).map((row) => row.project_id));
+
+      requestAnimationFrame(() => {
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        nameRef.current?.focus();
+        nameRef.current?.select();
       });
-    setPositions(
-      org.profilePositions
-        .filter((pp) => pp.profile_id === id)
-        .map((pp) => ({ positionId: pp.position_id, rank: pp.rank_label })),
-    );
-    setManagerIds(org.links.filter((l) => l.profile_id === id).map((l) => l.manager_id));
-    setManagerPositionIds(
-      (managerLinksByPosition.data ?? [])
-        .filter((l) => l.profile_id === id)
-        .map((l) => l.position_id),
-    );
-    supabase
-      .from("project_members")
-      .select("project_id")
-      .eq("profile_id", id)
-      .then(({ data }) => setProjectIds((data ?? []).map((r) => r.project_id)));
-    // On amène l'utilisateur directement sur le nom du membre à modifier.
-    requestAnimationFrame(() => {
-      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      nameRef.current?.focus();
-      nameRef.current?.select();
-    });
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? `Impossible de charger toutes les informations : ${error.message}`
+          : "Impossible de charger toutes les informations du membre.",
+      );
+    } finally {
+      setEditingLoadingId(null);
+    }
   }
 
   if (!org.isAdmin && !org.myBasePositions.includes("Producteur général")) {
@@ -314,7 +342,8 @@ function MembersPage() {
           </CardHeader>
           <CardContent>
             <form
-              className="space-y-3"
+              className={`space-y-3 ${editingLoadingId ? "pointer-events-none opacity-60" : ""}`}
+              aria-busy={!!editingLoadingId}
               onSubmit={(e) => {
                 e.preventDefault();
                 editingId ? save.mutate() : create.mutate();
@@ -662,8 +691,13 @@ function MembersPage() {
                       .join(" · ") || "—"}
                   </p>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => startEdit(p.id)}>
-                  Modifier
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!!editingLoadingId}
+                  onClick={() => void startEdit(p.id)}
+                >
+                  {editingLoadingId === p.id ? "Chargement…" : "Modifier"}
                 </Button>
                 <Button
                   size="sm"
