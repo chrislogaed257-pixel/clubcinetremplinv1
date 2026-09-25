@@ -386,6 +386,11 @@ function MembersPage() {
                           />
                           <label htmlFor={`pos-${p.id}`} className="mr-auto cursor-pointer">
                             {p.name}
+                            {selected && (p.description ?? "").trim() && (
+                              <span className="block text-[11px] leading-snug text-muted-foreground">
+                                {p.description}
+                              </span>
+                            )}
                           </label>
                           {taken > 0 && (
                             <span className="text-[11px] text-muted-foreground">
