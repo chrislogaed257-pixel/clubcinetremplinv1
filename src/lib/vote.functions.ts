@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireCloudAuth } from "./cloud-auth";
 
 /**
  * Vote anonyme. Tout passe par le serveur : les tables de quota (A) et de voix (B)
@@ -215,3 +216,23 @@ export const voteResults = createServerFn({ method: "POST" })
     return { rows, total: tallies?.length ?? 0, visible: true };
   });
 
+
+/** Suivi privé en direct : réservé au Producteur général / administrateurs. */
+export const producerLiveResults = createServerFn({ method: "POST" })
+  .middleware([requireCloudAuth])
+  .inputValidator((d: unknown) => resultsInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: allowed } = await context.supabase.rpc("is_admin_or_general_producer", {
+      _user_id: context.userId,
+    });
+    if (!allowed) throw new Error("Accès réservé au Producteur général.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: tallies }, { data: projects }] = await Promise.all([
+      supabaseAdmin.from("vote_tallies").select("project_code").eq("session_id", data.sessionId),
+      supabaseAdmin.from("vote_projects").select("id, code").eq("session_id", data.sessionId),
+    ]);
+    const counts = new Map<string, number>();
+    for (const t of tallies ?? []) counts.set(t.project_code, (counts.get(t.project_code) ?? 0) + 1);
+    const rows = (projects ?? []).map((p) => ({ projectId: p.id as string, votes: counts.get(p.code) ?? 0 }));
+    return { rows, total: tallies?.length ?? 0 };
+  });
