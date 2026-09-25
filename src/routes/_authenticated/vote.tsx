@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { downloadCsv, downloadTablePdf } from "@/lib/downloads";
-import { voteResults } from "@/lib/vote.functions";
+import { voteResults, producerLiveResults } from "@/lib/vote.functions";
 
 export const Route = createFileRoute("/_authenticated/vote")({
   component: VotePage,
@@ -210,13 +210,7 @@ function SessionCard({
     enabled: opened && isChief,
     refetchInterval: opened && !closed && isChief ? 2000 : false,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("vote_results", { _session: session.id });
-      if (error) throw error;
-      const rows = (data ?? []).map((row) => ({
-        projectId: row.project_id,
-        votes: Number(row.votes ?? 0),
-      }));
-      return { rows, total: rows.reduce((sum, row) => sum + row.votes, 0) };
+      return producerLiveResults({ data: { sessionId: session.id } });
     },
   });
 
