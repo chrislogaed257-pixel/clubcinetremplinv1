@@ -42,9 +42,9 @@ export function NotificationsBell({ userId }: { userId: string | undefined }) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="relative gap-1.5">
-          <Bell className="h-4 w-4" />
-          Notifications
+        <Button variant="outline" size="sm" className="relative h-7 shrink-0 gap-1 px-2 text-xs">
+          <Bell className="h-3.5 w-3.5" />
+          <span className="hidden xl:inline">Notifications</span>
           {unread > 0 && (
             <span className="rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
               {unread}
