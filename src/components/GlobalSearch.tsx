@@ -12,7 +12,11 @@ type Result = { label: string; kind: string; to: string };
  * Recherche globale. Toutes les requêtes passent par la base : un membre ne peut
  * donc voir que ce que ses droits l'autorisent. Les votes ne sont jamais indexés.
  */
-export function GlobalSearch() {
+export function GlobalSearch({
+  sections = [],
+}: {
+  sections?: { to: string; label: string }[];
+} = {}) {
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
   const org = useOrgContext();
@@ -20,7 +24,7 @@ export function GlobalSearch() {
   const q = term.trim();
 
   const results = useQuery({
-    queryKey: ["global_search", q],
+    queryKey: ["global_search", q, sections.map((s) => s.to).join("|")],
     enabled: q.length >= 2 && !org.isMentor && !org.isFunder,
     queryFn: async (): Promise<Result[]> => {
       const like = `%${q}%`;
