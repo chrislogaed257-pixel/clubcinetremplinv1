@@ -30,5 +30,5 @@ export const requireCloudAuth = createMiddleware({ type: "function" }).server(as
   const { data, error } = await supabase.auth.getClaims(token);
   const userId = data?.claims?.sub;
   if (error || !userId) throw new Error("Votre session a expiré. Reconnectez-vous.");
-  return next({ context: { supabase, userId, claims: data.claims } });
+  return next({ context: { supabase, userId, claims: data.claims, accessToken: token } });
 });
