@@ -115,6 +115,14 @@ export const deleteProject = createServerFn({ method: "POST" })
   .middleware([requireCloudAuth])
   .inputValidator((d: { projectId: string }) => d)
   .handler(async ({ data, context }) => {
+    if (!process.env["SUPABASE_SERVICE_ROLE_KEY"] || !process.env["SUPABASE_URL"]) {
+      // Hébergement sans clé serveur (ex. Vercel) : la base vérifie elle-même le poste.
+      const { error } = await context.supabase.rpc("soft_delete_project", {
+        _project: data.projectId,
+      });
+      if (error) throw new Error(error.message);
+      return { ok: true };
+    }
     const db = await assertAllowed(context.userId);
     const { error } = await db.from("projects").delete().eq("id", data.projectId);
     if (error) throw new Error(error.message);

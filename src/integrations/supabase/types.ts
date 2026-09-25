@@ -3351,6 +3351,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_setup_member: {
+        Args: {
+          _dislikes: string
+          _email: string
+          _full_name: string
+          _id: string
+          _likes: string
+          _managers: string[]
+          _positions: Json
+          _projects: string[]
+          _role: Database["public"]["Enums"]["app_role"]
+          _role_description: string
+        }
+        Returns: undefined
+      }
       archive_vote_session: {
         Args: { _proclamation: string; _session: string; _snapshot: Json }
         Returns: undefined
@@ -3373,6 +3388,7 @@ export type Database = {
         Args: { _project: string; _user: string }
         Returns: boolean
       }
+      can_edit_project_fiche: { Args: { _u: string }; Returns: boolean }
       can_manage_accounting: { Args: { _user_id: string }; Returns: boolean }
       can_see_ideas: { Args: { _user_id: string }; Returns: boolean }
       can_view_user: {
@@ -3461,11 +3477,16 @@ export type Database = {
       }
       open_direct_conversation: { Args: { _other: string }; Returns: string }
       send_pending_reminders: { Args: never; Returns: number }
+      soft_delete_project: { Args: { _project: string }; Returns: undefined }
       submit_task_result: {
         Args: { _link: string; _task: string }
         Returns: string
       }
       sync_schema_snapshot: { Args: never; Returns: number }
+      update_project_fiche: {
+        Args: { _changes: Json; _project: string }
+        Returns: Json
+      }
       vote_producer_results: { Args: { _session: string }; Returns: Json }
       vote_public_cast: {
         Args: { _code: string; _session: string; _token: string }

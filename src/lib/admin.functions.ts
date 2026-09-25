@@ -261,6 +261,35 @@ export const createMember = createServerFn({ method: "POST" })
   .inputValidator((d: MemberInput) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
+    if (!process.env["SUPABASE_SERVICE_ROLE_KEY"] || !process.env["SUPABASE_URL"]) {
+      // Hébergement sans clé serveur (ex. Vercel) : inscription publique puis mise en place par la base.
+      const { createClient } = await import("@supabase/supabase-js");
+      const url = process.env["SUPABASE_URL"] || import.meta.env["VITE_SUPABASE_URL"];
+      const key =
+        process.env["SUPABASE_PUBLISHABLE_KEY"] || import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
+      const pub = createClient(url, key, {
+        auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+      });
+      const { data: su, error: suErr } = await pub.auth.signUp({
+        email: data.email.trim().toLowerCase(),
+        password: data.password,
+      });
+      if (suErr || !su.user) throw new Error(suErr?.message ?? "Création impossible");
+      const { error: rpcErr } = await context.supabase.rpc("admin_setup_member", {
+        _id: su.user.id,
+        _email: data.email.trim().toLowerCase(),
+        _full_name: data.fullName,
+        _role: data.role,
+        _likes: data.likes ?? "",
+        _dislikes: data.dislikes ?? "",
+        _role_description: data.roleDescription ?? "",
+        _positions: data.positions,
+        _managers: data.managerIds,
+        _projects: data.projectIds ?? [],
+      });
+      if (rpcErr) throw new Error(rpcErr.message);
+      return { ok: true, id: su.user.id };
+    }
     const db = await admin();
     const { data: created, error } = await db.auth.admin.createUser({
       email: data.email,

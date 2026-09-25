@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { clubLeaderIds, notifyProfiles, sendClubMail } from "@/lib/club-email";
 import { Mail, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { FicheEditor } from "@/components/FicheEditor";
 
 export const Route = createFileRoute("/_authenticated/projets-approuves")({
   component: ApprovedProjectsPage,
@@ -79,7 +80,7 @@ const DECISIONS: Record<string, string> = {
 function ApprovedProjectsPage() {
   const org = useOrgContext();
   const qc = useQueryClient();
-  const [view, setView] = useState<"interne" | "externe" | "etude">("interne");
+  const [view, setView] = useState<"tous" | "interne" | "externe" | "etude">("tous");
   const [comment, setComment] = useState<Record<string, string>>({});
   const [deadline, setDeadline] = useState<Record<string, string>>({});
 
@@ -262,9 +263,11 @@ function ApprovedProjectsPage() {
 
   const all = projects.data ?? [];
   const list =
-    view === "etude"
-      ? all.filter((p) => p.approval_state === "en_etude")
-      : all.filter((p) => p.approval_state === "approuve" && (p.origin === "externe") === (view === "externe"));
+    view === "tous"
+      ? all
+      : view === "etude"
+        ? all.filter((p) => p.approval_state === "en_etude")
+        : all.filter((p) => p.approval_state === "approuve" && (p.origin === "externe") === (view === "externe"));
 
   const phaseName = (id: string | null) =>
     (phases.data ?? []).find((p) => p.id === id)?.name ?? "Phase non définie";
@@ -272,10 +275,13 @@ function ApprovedProjectsPage() {
   const canDelete = (p: P) =>
     isPG || p.created_by === org.myId || p.author_profile_id === org.myId;
 
+  const canEditFiche = isPG || isPD || org.myBasePositions.includes("Scénariste");
+
   return (
     <AppLayout title="Projets approuvés">
       <Tabs value={view} onValueChange={(v) => setView(v as typeof view)}>
-        <TabsList>
+        <TabsList className="flex-wrap">
+          <TabsTrigger value="tous">Tous les projets ({all.length})</TabsTrigger>
           <TabsTrigger value="interne">Projets internes approuvés</TabsTrigger>
           <TabsTrigger value="externe">Projets externes approuvés</TabsTrigger>
           <TabsTrigger value="etude">En cours d'étude</TabsTrigger>
@@ -355,6 +361,7 @@ function ApprovedProjectsPage() {
                       ))}
                   </div>
 
+                  {canEditFiche && <FicheEditor project={p} />}
                   <p className="text-xs text-muted-foreground">
                     Auteur : {p.author_name || org.profileName(p.created_by ?? "")}
                     {p.author_position ? ` · ${p.author_position}` : ""}
