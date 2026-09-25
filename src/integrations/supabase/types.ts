@@ -3366,6 +3366,21 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_update_member_data: {
+        Args: {
+          _dislikes: string
+          _email: string
+          _full_name: string
+          _id: string
+          _likes: string
+          _managers: string[]
+          _positions: Json
+          _projects: string[]
+          _role: Database["public"]["Enums"]["app_role"]
+          _role_description: string
+        }
+        Returns: undefined
+      }
       archive_vote_session: {
         Args: { _proclamation: string; _session: string; _snapshot: Json }
         Returns: undefined
