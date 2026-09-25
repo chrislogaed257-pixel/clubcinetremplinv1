@@ -8,7 +8,7 @@ import { Chat, useConversation } from "@/components/Chat";
 import { ProjectPhaseControl } from "@/components/ProjectPhase";
 import { getIdeaFileLink, approveIdeaAsProducer } from "@/lib/ideas.functions";
 import { createProject, deleteProject } from "@/lib/projects.functions";
-import { FicheEditor } from "./projets-approuves";
+import { FicheEditor } from "@/components/FicheEditor";
 import { sendClubMail } from "@/lib/club-email";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

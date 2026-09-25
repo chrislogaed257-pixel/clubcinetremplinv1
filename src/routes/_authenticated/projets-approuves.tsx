@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { clubLeaderIds, notifyProfiles, sendClubMail } from "@/lib/club-email";
 import { Mail, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { FicheEditor } from "@/components/FicheEditor";
 
 export const Route = createFileRoute("/_authenticated/projets-approuves")({
   component: ApprovedProjectsPage,
