@@ -3351,7 +3351,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_set_member_flags: {
+        Args: {
+          _active?: boolean
+          _id: string
+          _must_change_password?: boolean
+        }
+        Returns: undefined
+      }
       admin_setup_member: {
+        Args: {
+          _dislikes: string
+          _email: string
+          _full_name: string
+          _id: string
+          _likes: string
+          _managers: string[]
+          _positions: Json
+          _projects: string[]
+          _role: Database["public"]["Enums"]["app_role"]
+          _role_description: string
+        }
+        Returns: undefined
+      }
+      admin_update_member_data: {
         Args: {
           _dislikes: string
           _email: string

@@ -33,6 +33,22 @@ async function admin() {
   return supabaseAdmin;
 }
 
+const MEMBER_ADMIN_RELAY =
+  "https://clubcinetremplinv1.lovable.app/api/public/member-admin";
+
+async function relayMemberAdmin(accessToken: string, body: Record<string, unknown>) {
+  const response = await fetch(MEMBER_ADMIN_RELAY, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${accessToken}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  const result = (await response.json().catch(() => ({}))) as { error?: string };
+  if (!response.ok) throw new Error(result.error ?? "Opération impossible");
+}
+
 async function ensureMentorConversation(role: string, id: string, name: string) {
   if (role !== "mentor") return;
   const db = await admin();
@@ -338,10 +354,34 @@ export const updateMember = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
+    const newEmail = (data.email ?? "").trim().toLowerCase();
+    if (!process.env["SUPABASE_SERVICE_ROLE_KEY"] || !process.env["SUPABASE_URL"]) {
+      if (newEmail || (data.password && data.password.length >= 6)) {
+        await relayMemberAdmin(context.accessToken, {
+          action: "update",
+          memberId: data.id,
+          ...(newEmail ? { email: newEmail } : {}),
+          ...(data.password && data.password.length >= 6 ? { password: data.password } : {}),
+        });
+      }
+      const { error } = await context.supabase.rpc("admin_update_member_data", {
+        _id: data.id,
+        _email: newEmail,
+        _full_name: data.fullName,
+        _role: data.role,
+        _likes: data.likes ?? "",
+        _dislikes: data.dislikes ?? "",
+        _role_description: data.roleDescription ?? "",
+        _positions: data.positions,
+        _managers: data.managerIds,
+        _projects: data.projectIds ?? [],
+      });
+      if (error) throw new Error(error.message);
+      return { ok: true };
+    }
     const db = await admin();
     const description =
       (data.roleDescription ?? "").trim() || (await officialDescription(data.positions));
-    const newEmail = (data.email ?? "").trim().toLowerCase();
     if (newEmail) {
       const { error: eErr } = await db.auth.admin.updateUserById(data.id, {
         email: newEmail,
@@ -385,6 +425,10 @@ export const deleteMember = createServerFn({ method: "POST" })
     await assertAdmin(context);
     if (data.id === context.userId)
       throw new Error("Vous ne pouvez pas supprimer votre propre compte.");
+    if (!process.env["SUPABASE_SERVICE_ROLE_KEY"] || !process.env["SUPABASE_URL"]) {
+      await relayMemberAdmin(context.accessToken, { action: "delete", memberId: data.id });
+      return { ok: true };
+    }
     const db = await admin();
     const { error } = await db.auth.admin.deleteUser(data.id);
     if (error) throw new Error(error.message);
@@ -422,8 +466,22 @@ export const resetMemberPassword = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; forceChange: boolean }) => d)
   .handler(async ({ data, context }) => {
     await assertProducer(context);
-    const db = await admin();
     const password = randomPassword();
+    if (!process.env["SUPABASE_SERVICE_ROLE_KEY"] || !process.env["SUPABASE_URL"]) {
+      await relayMemberAdmin(context.accessToken, {
+        action: "reset-password",
+        memberId: data.id,
+        password,
+      });
+      const { error } = await context.supabase.rpc("admin_set_member_flags", {
+        _id: data.id,
+        _active: null,
+        _must_change_password: data.forceChange,
+      });
+      if (error) throw new Error(error.message);
+      return { password };
+    }
+    const db = await admin();
     const { error } = await db.auth.admin.updateUserById(data.id, { password });
     if (error) throw new Error(error.message);
     await db
@@ -439,11 +497,11 @@ export const setMustChangePassword = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; value: boolean }) => d)
   .handler(async ({ data, context }) => {
     await assertProducer(context);
-    const db = await admin();
-    const { error } = await db
-      .from("profiles")
-      .update({ must_change_password: data.value })
-      .eq("id", data.id);
+    const { error } = await context.supabase.rpc("admin_set_member_flags", {
+      _id: data.id,
+      _active: null,
+      _must_change_password: data.value,
+    });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -456,6 +514,20 @@ export const setMemberActive = createServerFn({ method: "POST" })
     await assertAdmin(context);
     if (data.id === context.userId && !data.active)
       throw new Error("Vous ne pouvez pas désactiver votre propre compte.");
+    if (!process.env["SUPABASE_SERVICE_ROLE_KEY"] || !process.env["SUPABASE_URL"]) {
+      await relayMemberAdmin(context.accessToken, {
+        action: "set-active",
+        memberId: data.id,
+        active: data.active,
+      });
+      const { error } = await context.supabase.rpc("admin_set_member_flags", {
+        _id: data.id,
+        _active: data.active,
+        _must_change_password: null,
+      });
+      if (error) throw new Error(error.message);
+      return { ok: true };
+    }
     const db = await admin();
     const { error } = await db.auth.admin.updateUserById(data.id, {
       ban_duration: data.active ? "none" : "876000h",
