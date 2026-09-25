@@ -51,6 +51,7 @@ import { Route as CastingSoumissionTokenRouteImport } from './routes/casting-sou
 import { Route as ReunionTokenRouteImport } from './routes/reunion.$token'
 import { Route as SuiviDossierTokenRouteImport } from './routes/suivi-dossier.$token'
 import { Route as AuthenticatedProfilIdRouteImport } from './routes/_authenticated/profil.$id'
+import { Route as ApiPublicMemberAdminRouteImport } from './routes/api/public/member-admin'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -269,6 +270,11 @@ const AuthenticatedProfilIdRoute = AuthenticatedProfilIdRouteImport.update({
   path: '/profil/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicMemberAdminRoute = ApiPublicMemberAdminRouteImport.update({
+  id: '/api/public/member-admin',
+  path: '/api/public/member-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -312,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/reunion/$token': typeof ReunionTokenRoute
   '/suivi-dossier/$token': typeof SuiviDossierTokenRoute
   '/profil/$id': typeof AuthenticatedProfilIdRoute
+  '/api/public/member-admin': typeof ApiPublicMemberAdminRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -355,6 +362,7 @@ export interface FileRoutesByTo {
   '/reunion/$token': typeof ReunionTokenRoute
   '/suivi-dossier/$token': typeof SuiviDossierTokenRoute
   '/profil/$id': typeof AuthenticatedProfilIdRoute
+  '/api/public/member-admin': typeof ApiPublicMemberAdminRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -400,6 +408,7 @@ export interface FileRoutesById {
   '/reunion/$token': typeof ReunionTokenRoute
   '/suivi-dossier/$token': typeof SuiviDossierTokenRoute
   '/_authenticated/profil/$id': typeof AuthenticatedProfilIdRoute
+  '/api/public/member-admin': typeof ApiPublicMemberAdminRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -445,6 +454,7 @@ export interface FileRouteTypes {
     | '/reunion/$token'
     | '/suivi-dossier/$token'
     | '/profil/$id'
+    | '/api/public/member-admin'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -488,6 +498,7 @@ export interface FileRouteTypes {
     | '/reunion/$token'
     | '/suivi-dossier/$token'
     | '/profil/$id'
+    | '/api/public/member-admin'
   id:
     | '__root__'
     | '/'
@@ -532,6 +543,7 @@ export interface FileRouteTypes {
     | '/reunion/$token'
     | '/suivi-dossier/$token'
     | '/_authenticated/profil/$id'
+    | '/api/public/member-admin'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -547,6 +559,7 @@ export interface RootRouteChildren {
   CastingSoumissionTokenRoute: typeof CastingSoumissionTokenRoute
   ReunionTokenRoute: typeof ReunionTokenRoute
   SuiviDossierTokenRoute: typeof SuiviDossierTokenRoute
+  ApiPublicMemberAdminRoute: typeof ApiPublicMemberAdminRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -845,6 +858,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfilIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/member-admin': {
+      id: '/api/public/member-admin'
+      path: '/api/public/member-admin'
+      fullPath: '/api/public/member-admin'
+      preLoaderRoute: typeof ApiPublicMemberAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -930,6 +950,7 @@ const rootRouteChildren: RootRouteChildren = {
   CastingSoumissionTokenRoute: CastingSoumissionTokenRoute,
   ReunionTokenRoute: ReunionTokenRoute,
   SuiviDossierTokenRoute: SuiviDossierTokenRoute,
+  ApiPublicMemberAdminRoute: ApiPublicMemberAdminRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
