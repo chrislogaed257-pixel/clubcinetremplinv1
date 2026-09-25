@@ -3351,6 +3351,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_set_member_flags: {
+        Args: {
+          _active?: boolean
+          _id: string
+          _must_change_password?: boolean
+        }
+        Returns: undefined
+      }
       admin_setup_member: {
         Args: {
           _dislikes: string
