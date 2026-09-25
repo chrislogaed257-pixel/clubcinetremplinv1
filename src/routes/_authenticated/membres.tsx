@@ -254,8 +254,13 @@ function MembersPage() {
     try {
       // Lecture directe de toute la fiche : sur un hébergement plus lent, les listes générales
       // peuvent ne pas être prêtes au clic et faisaient alors apparaître des cases vides.
-      const [rolesResult, positionsResult, managersResult, managerPositionsResult, projectsResult] =
+      const [profileResult, rolesResult, positionsResult, managersResult, managerPositionsResult, projectsResult] =
         await Promise.all([
+          supabase
+            .from("profiles")
+            .select("full_name, email, role_description, likes, dislikes")
+            .eq("id", id)
+            .single(),
           supabase.from("user_roles").select("role").eq("user_id", id),
           supabase
             .from("profile_positions")
@@ -270,6 +275,7 @@ function MembersPage() {
         ]);
 
       const loadError = [
+        profileResult.error,
         rolesResult.error,
         positionsResult.error,
         managersResult.error,
@@ -277,6 +283,7 @@ function MembersPage() {
         projectsResult.error,
       ].find(Boolean);
       if (loadError) throw new Error(loadError.message);
+      if (!profileResult.data) throw new Error("Le membre est introuvable.");
 
       const savedRoles = (rolesResult.data ?? []).map((row) => row.role as Role);
       const savedRole =
@@ -286,12 +293,12 @@ function MembersPage() {
 
       // Le formulaire n'est remplacé qu'une fois toutes les anciennes valeurs reçues.
       setEditingId(id);
-      setFullName(p.full_name);
-      setEmail(p.email ?? "");
-      setRoleDescription(p.role_description ?? "");
-      setDescTouched(!!(p.role_description ?? "").trim());
-      setLikes(p.likes ?? "");
-      setDislikes(p.dislikes ?? "");
+      setFullName(profileResult.data.full_name);
+      setEmail(profileResult.data.email ?? "");
+      setRoleDescription(profileResult.data.role_description ?? "");
+      setDescTouched(!!(profileResult.data.role_description ?? "").trim());
+      setLikes(profileResult.data.likes ?? "");
+      setDislikes(profileResult.data.dislikes ?? "");
       setPassword("");
       setRole(savedRole);
       setPositions(
