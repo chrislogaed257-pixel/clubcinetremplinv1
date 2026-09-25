@@ -12,7 +12,11 @@ type Result = { label: string; kind: string; to: string };
  * Recherche globale. Toutes les requêtes passent par la base : un membre ne peut
  * donc voir que ce que ses droits l'autorisent. Les votes ne sont jamais indexés.
  */
-export function GlobalSearch() {
+export function GlobalSearch({
+  sections = [],
+}: {
+  sections?: { to: string; label: string }[];
+} = {}) {
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
   const org = useOrgContext();
@@ -20,7 +24,7 @@ export function GlobalSearch() {
   const q = term.trim();
 
   const results = useQuery({
-    queryKey: ["global_search", q],
+    queryKey: ["global_search", q, sections.map((s) => s.to).join("|")],
     enabled: q.length >= 2 && !org.isMentor && !org.isFunder,
     queryFn: async (): Promise<Result[]> => {
       const like = `%${q}%`;
@@ -128,7 +132,13 @@ export function GlobalSearch() {
         )
         .slice(0, 4)
         .map((p) => ({ label: p.name, kind: "Poste", to: "/organigramme" }));
+      const norm = (s: string) =>
+        s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const sectionResults: Result[] = sections
+        .filter((s) => norm(s.label).includes(norm(q)))
+        .map((s) => ({ label: s.label, kind: "Rubrique", to: s.to }));
       return [
+        ...sectionResults,
         ...people,
         ...positions,
         ...(projects.data ?? []).map((r) => ({ label: r.title, kind: "Projet", to: "/idees" })),

@@ -424,7 +424,7 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
                 </p>
               )}
             </div>
-            <GlobalSearch />
+            <GlobalSearch sections={nav.map((i) => ({ to: i.to, label: i.label }))} />
             <PositionSwitcher myPositions={org.myPositions} />
             <NotificationsBell userId={me?.userId} />
             <div className="flex overflow-hidden rounded border border-border">
