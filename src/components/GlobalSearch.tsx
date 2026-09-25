@@ -194,7 +194,7 @@ export function GlobalSearch({
   if (org.isMentor || org.isFunder) return null;
 
   return (
-    <div className="relative">
+    <div className="relative shrink-0">
       <Input
         value={term}
         onChange={(e) => {
@@ -203,7 +203,7 @@ export function GlobalSearch({
         }}
         onFocus={() => setOpen(true)}
         placeholder="🔍 Rechercher…"
-        className="h-8 w-40 text-xs sm:w-56"
+        className="h-7 w-36 text-[11px] lg:w-48"
       />
       {open && q.length >= 2 && (
         <div className="absolute right-0 z-40 mt-1 max-h-80 w-72 overflow-y-auto rounded border border-border bg-background p-1 shadow-lg">

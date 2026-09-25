@@ -382,20 +382,20 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
       </aside>
 
       <div className="flex-1">
-        <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-          <nav className="flex flex-wrap gap-1 border-b border-border px-4 py-2 print:hidden">
+        <header className="sticky top-0 z-40 border-b border-border bg-background/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <nav className="flex items-center gap-0.5 overflow-x-auto border-b border-border px-3 py-1 print:hidden">
             {mainNav.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
                 onClick={rememberScroll}
-                className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`flex h-7 shrink-0 items-center gap-1.5 rounded px-2 text-xs font-medium transition-colors ${
                   pathname === item.to
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 }`}
               >
-                <item.Icon className="h-4 w-4 shrink-0" />
+                <item.Icon className="h-3.5 w-3.5 shrink-0" />
                 <span>{t(item.label)}</span>
                 {badgeFor(item.to) > 0 && (
                   <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
@@ -405,19 +405,18 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
               </Link>
             ))}
           </nav>
-          <div className="flex flex-wrap items-center gap-2 px-4 py-3 print:hidden">
-            <div className="mr-auto min-w-0">
-              <p className="text-xs text-muted-foreground">
+          <div className="flex min-h-10 items-center gap-1.5 overflow-x-auto px-3 py-1 print:hidden">
+            <div className="mr-auto min-w-40 max-w-72 shrink truncate pr-1">
+              <p className="truncate text-[11px] leading-tight text-muted-foreground">
                 {me?.profile?.full_name}
                 {org.myPositions.length > 0 ? ` : ${org.myPositions.join(", ")}` : ""}
                 {me?.isAdmin ? " (admin)" : ""}
               </p>
               {org.myPositions.length > 1 && org.activePosition && (
-                <p className="text-xs">
+                <p className="flex min-w-0 items-center gap-1 truncate text-[11px] leading-tight">
                   <span className="text-primary">Poste utilisé : {org.activePosition}</span>
                   {org.activePositionDescription && (
-                    <span className="text-muted-foreground">
-                      {" "}
+                    <span className="truncate text-muted-foreground" title={org.activePositionDescription}>
                       — {org.activePositionDescription}
                     </span>
                   )}
@@ -427,13 +426,13 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
             <GlobalSearch sections={nav.map((i) => ({ to: i.to, label: i.label }))} />
             <PositionSwitcher myPositions={org.myPositions} />
             <NotificationsBell userId={me?.userId} />
-            <div className="flex overflow-hidden rounded border border-border">
+            <div className="flex h-7 shrink-0 overflow-hidden rounded border border-border">
               {(["fr", "en"] as const).map((l) => (
                 <button
                   key={l}
                   type="button"
                   onClick={() => switchLang(l)}
-                  className={`px-2 py-1 text-xs uppercase ${
+                  className={`px-1.5 text-[10px] uppercase ${
                     lang === l ? "bg-primary text-primary-foreground" : "text-muted-foreground"
                   }`}
                 >
@@ -444,6 +443,7 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
             <Button
               variant="outline"
               size="sm"
+              className="h-7 w-7 shrink-0 p-0"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               title={theme === "dark" ? t("Mode clair") : t("Mode sombre")}
             >
@@ -451,19 +451,19 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
             </Button>
             {isGeneralProducer && (
               <Link to="/membres">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
                   {t("Membres")}
                 </Button>
               </Link>
             )}
-            <Button variant="ghost" size="sm" onClick={signOut}>
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={signOut}>
               {t("Déconnexion")}
             </Button>
           </div>
         </header>
         {me?.profile?.must_change_password && <PasswordGate userId={me.userId} />}
-        <main key={title} className="page-enter mx-auto max-w-6xl px-4 py-6">
-          <div className="film-strip mb-5 flex items-center gap-3 pb-3">
+        <main key={title} className="page-enter mx-auto max-w-6xl px-4 py-4">
+          <div className="film-strip mb-4 flex items-center gap-3 pb-2">
             <Button
               variant="outline"
               size="sm"
@@ -474,7 +474,7 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-2xl font-semibold">{t(title)}</h1>
+            <h1 className="text-xl font-semibold">{t(title)}</h1>
           </div>
           {blockedByPosition ? (
             <div className="rounded border border-border bg-secondary/40 p-6 text-sm">

@@ -37,3 +37,4 @@
 - [x] Types de la base régénérés : plus aucune erreur de compilation (269 → 0), enregistrement d'une fiche membre et écran Vote testés sans erreur
 - [x] Gestion des membres sur Vercel sans clé privée locale : modification, réinitialisation du mot de passe, suppression et activation via relais Lovable Cloud authentifié
 - [x] Modification d’un membre : préremplissage direct et groupé depuis la base, avec conservation vérifiée après enregistrement
+- [x] Barre supérieure compacte : mêmes raccourcis, informations et commandes, réorganisés pour libérer l’espace de travail

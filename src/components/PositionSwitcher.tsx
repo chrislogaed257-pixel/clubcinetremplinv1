@@ -17,13 +17,13 @@ export function PositionSwitcher({ myPositions }: { myPositions: string[] }) {
     positions.find((p) => p.name === baseOf(label))?.description ?? "";
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-2">
-        <span className="hidden text-xs text-muted-foreground sm:inline">
+    <div className="flex shrink-0 items-center gap-1.5">
+      <div className="flex items-center gap-1.5">
+        <span className="hidden text-[11px] text-muted-foreground xl:inline">
           Je travaille maintenant comme :
         </span>
         <Select value={active} onValueChange={choose}>
-          <SelectTrigger className="h-8 w-56 text-xs">
+          <SelectTrigger className="h-7 w-44 text-[11px]">
             <SelectValue placeholder="Choisir un poste" />
           </SelectTrigger>
           <SelectContent>
@@ -41,7 +41,7 @@ export function PositionSwitcher({ myPositions }: { myPositions: string[] }) {
         </Select>
       </div>
       {active && descriptionOf(active) && (
-        <p className="max-w-64 text-[11px] leading-tight text-muted-foreground">
+        <p className="hidden max-w-40 truncate text-[10px] leading-tight text-muted-foreground 2xl:block" title={descriptionOf(active)}>
           {descriptionOf(active)}
         </p>
       )}
