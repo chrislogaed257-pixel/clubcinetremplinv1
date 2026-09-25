@@ -132,7 +132,13 @@ export function GlobalSearch({
         )
         .slice(0, 4)
         .map((p) => ({ label: p.name, kind: "Poste", to: "/organigramme" }));
+      const norm = (s: string) =>
+        s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const sectionResults: Result[] = sections
+        .filter((s) => norm(s.label).includes(norm(q)))
+        .map((s) => ({ label: s.label, kind: "Rubrique", to: s.to }));
       return [
+        ...sectionResults,
         ...people,
         ...positions,
         ...(projects.data ?? []).map((r) => ({ label: r.title, kind: "Projet", to: "/idees" })),
