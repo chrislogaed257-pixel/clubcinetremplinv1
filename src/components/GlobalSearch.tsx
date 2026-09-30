@@ -42,7 +42,9 @@ export function GlobalSearch({
     };
     const closeOutside = (event: PointerEvent) => {
       const target = event.target;
-      if (target instanceof Node && !searchRef.current?.contains(target)) setOpen(false);
+      if (!(target instanceof Node) || searchRef.current?.contains(target)) return;
+      if (target instanceof Element && target.closest("#global-search-results")) return;
+      setOpen(false);
     };
     placeResults();
     window.addEventListener("resize", placeResults);
