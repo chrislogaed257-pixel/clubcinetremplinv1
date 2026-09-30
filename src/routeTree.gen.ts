@@ -51,6 +51,7 @@ import { Route as CastingSoumissionTokenRouteImport } from './routes/casting-sou
 import { Route as ReunionTokenRouteImport } from './routes/reunion.$token'
 import { Route as SuiviDossierTokenRouteImport } from './routes/suivi-dossier.$token'
 import { Route as AuthenticatedProfilIdRouteImport } from './routes/_authenticated/profil.$id'
+import { Route as ApiPublicFnRelayRouteImport } from './routes/api/public/fn-relay'
 import { Route as ApiPublicMemberAdminRouteImport } from './routes/api/public/member-admin'
 
 const IndexRoute = IndexRouteImport.update({
@@ -270,6 +271,11 @@ const AuthenticatedProfilIdRoute = AuthenticatedProfilIdRouteImport.update({
   path: '/profil/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicFnRelayRoute = ApiPublicFnRelayRouteImport.update({
+  id: '/api/public/fn-relay',
+  path: '/api/public/fn-relay',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMemberAdminRoute = ApiPublicMemberAdminRouteImport.update({
   id: '/api/public/member-admin',
   path: '/api/public/member-admin',
@@ -318,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/reunion/$token': typeof ReunionTokenRoute
   '/suivi-dossier/$token': typeof SuiviDossierTokenRoute
   '/profil/$id': typeof AuthenticatedProfilIdRoute
+  '/api/public/fn-relay': typeof ApiPublicFnRelayRoute
   '/api/public/member-admin': typeof ApiPublicMemberAdminRoute
 }
 export interface FileRoutesByTo {
@@ -362,6 +369,7 @@ export interface FileRoutesByTo {
   '/reunion/$token': typeof ReunionTokenRoute
   '/suivi-dossier/$token': typeof SuiviDossierTokenRoute
   '/profil/$id': typeof AuthenticatedProfilIdRoute
+  '/api/public/fn-relay': typeof ApiPublicFnRelayRoute
   '/api/public/member-admin': typeof ApiPublicMemberAdminRoute
 }
 export interface FileRoutesById {
@@ -408,6 +416,7 @@ export interface FileRoutesById {
   '/reunion/$token': typeof ReunionTokenRoute
   '/suivi-dossier/$token': typeof SuiviDossierTokenRoute
   '/_authenticated/profil/$id': typeof AuthenticatedProfilIdRoute
+  '/api/public/fn-relay': typeof ApiPublicFnRelayRoute
   '/api/public/member-admin': typeof ApiPublicMemberAdminRoute
 }
 export interface FileRouteTypes {
@@ -454,6 +463,7 @@ export interface FileRouteTypes {
     | '/reunion/$token'
     | '/suivi-dossier/$token'
     | '/profil/$id'
+    | '/api/public/fn-relay'
     | '/api/public/member-admin'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -498,6 +508,7 @@ export interface FileRouteTypes {
     | '/reunion/$token'
     | '/suivi-dossier/$token'
     | '/profil/$id'
+    | '/api/public/fn-relay'
     | '/api/public/member-admin'
   id:
     | '__root__'
@@ -543,6 +554,7 @@ export interface FileRouteTypes {
     | '/reunion/$token'
     | '/suivi-dossier/$token'
     | '/_authenticated/profil/$id'
+    | '/api/public/fn-relay'
     | '/api/public/member-admin'
   fileRoutesById: FileRoutesById
 }
@@ -559,6 +571,7 @@ export interface RootRouteChildren {
   CastingSoumissionTokenRoute: typeof CastingSoumissionTokenRoute
   ReunionTokenRoute: typeof ReunionTokenRoute
   SuiviDossierTokenRoute: typeof SuiviDossierTokenRoute
+  ApiPublicFnRelayRoute: typeof ApiPublicFnRelayRoute
   ApiPublicMemberAdminRoute: typeof ApiPublicMemberAdminRoute
 }
 
@@ -858,6 +871,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfilIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/fn-relay': {
+      id: '/api/public/fn-relay'
+      path: '/api/public/fn-relay'
+      fullPath: '/api/public/fn-relay'
+      preLoaderRoute: typeof ApiPublicFnRelayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/member-admin': {
       id: '/api/public/member-admin'
       path: '/api/public/member-admin'
@@ -950,6 +970,7 @@ const rootRouteChildren: RootRouteChildren = {
   CastingSoumissionTokenRoute: CastingSoumissionTokenRoute,
   ReunionTokenRoute: ReunionTokenRoute,
   SuiviDossierTokenRoute: SuiviDossierTokenRoute,
+  ApiPublicFnRelayRoute: ApiPublicFnRelayRoute,
   ApiPublicMemberAdminRoute: ApiPublicMemberAdminRoute,
 }
 export const routeTree = rootRouteImport
