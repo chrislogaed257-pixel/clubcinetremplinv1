@@ -11,6 +11,7 @@ type AcceptInput = { code?: string; email: string; password: string; fullName?: 
 export const acceptMentorInvite = createServerFn({ method: "POST" })
   .inputValidator((d: AcceptInput) => d)
   .handler(async ({ data }) => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("acceptMentorInvite", data) as any; }
     const code = (data.code ?? "").trim();
     const email = data.email.trim().toLowerCase();
     const fullName = (data.fullName ?? "").trim();
@@ -67,6 +68,7 @@ export const acceptMentorInvite = createServerFn({ method: "POST" })
  * Aucun identifiant n'est requis : seules les informations publiques du projet sortent.
  */
 export const mentorProjects = createServerFn({ method: "GET" }).handler(async () => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("mentorProjects") as any; }
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
   const { data } = await db
     .from("projects")
@@ -95,6 +97,7 @@ export const mentorProjects = createServerFn({ method: "GET" }).handler(async ()
 export const mentorMessageToClub = createServerFn({ method: "POST" })
   .inputValidator((d: { token: string; content: string }) => d)
   .handler(async ({ data }) => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("mentorMessageToClub", data) as any; }
     const content = data.content.trim();
     if (!content) throw new Error("Votre message est vide.");
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
@@ -145,6 +148,7 @@ export const mentorMessageToClub = createServerFn({ method: "POST" })
 export const mentorThread = createServerFn({ method: "POST" })
   .inputValidator((d: { token: string }) => d)
   .handler(async ({ data }) => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("mentorThread", data) as any; }
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
     const { data: invite } = await db
       .from("mentor_invites")
@@ -186,6 +190,7 @@ export const mentorThread = createServerFn({ method: "POST" })
 export const mentorSendMessage = createServerFn({ method: "POST" })
   .inputValidator((d: { token: string; content: string }) => d)
   .handler(async ({ data }) => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("mentorSendMessage", data) as any; }
     const content = data.content.trim();
     if (!content) throw new Error("Votre message est vide.");
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");

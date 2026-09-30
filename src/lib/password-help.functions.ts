@@ -38,6 +38,7 @@ export const requesterDetails = createServerFn({ method: "POST" })
   .middleware([requireCloudAuth])
   .inputValidator((d: { requestIds: string[] }) => d)
   .handler(async ({ data, context }): Promise<RequesterDetail[]> => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("requesterDetails", data) as any; }
     await assertHelper(context as never);
     if (data.requestIds.length === 0) return [];
     const db = await admin();
@@ -101,6 +102,7 @@ export const issueTemporaryPassword = createServerFn({ method: "POST" })
   .middleware([requireCloudAuth])
   .inputValidator((d: { requestId: string }) => d)
   .handler(async ({ data, context }) => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("issueTemporaryPassword", data) as any; }
     await assertHelper(context as never);
     const db = await admin();
     const { data: req } = await db

@@ -21,6 +21,7 @@ const ALLOWED = [".pdf", ".doc", ".docx", ".xls", ".xlsx"];
 export const submitIdea = createServerFn({ method: "POST" })
   .inputValidator((d: Submission) => d)
   .handler(async ({ data }) => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("submitIdea", data) as any; }
     const name = data.name?.trim();
     const email = data.email?.trim();
     const description = data.description?.trim();
@@ -90,6 +91,7 @@ export const getIdeaFileLink = createServerFn({ method: "POST" })
   .middleware([requireCloudAuth])
   .inputValidator((d: { ideaId: string }) => d)
   .handler(async ({ data, context }) => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("getIdeaFileLink", data) as any; }
     const { data: idea, error } = await context.supabase
       .from("ideas")
       .select("file_url")
@@ -136,6 +138,7 @@ type FullSubmission = {
 export const submitIdeaFull = createServerFn({ method: "POST" })
   .inputValidator((d: FullSubmission) => d)
   .handler(async ({ data }) => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("submitIdeaFull", data) as any; }
     const name = data.name?.trim();
     const email = data.email?.trim();
     const title = data.projectTitle?.trim();
@@ -219,6 +222,7 @@ export const approveIdeaAsProducer = createServerFn({ method: "POST" })
   .middleware([requireCloudAuth])
   .inputValidator((d: { ideaId: string }) => d)
   .handler(async ({ data, context }) => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("approveIdeaAsProducer", data) as any; }
     const db = await admin();
     const { data: roles } = await db
       .from("user_roles")

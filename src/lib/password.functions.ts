@@ -28,6 +28,7 @@ async function producersOf(position: string) {
 export const lookupMember = createServerFn({ method: "POST" })
   .inputValidator((d: { email: string }) => d)
   .handler(async ({ data }) => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("lookupMember", data) as any; }
     const db = await admin();
     const email = data.email.trim().toLowerCase();
     const { data: profile } = await db
@@ -72,6 +73,7 @@ export const lookupMember = createServerFn({ method: "POST" })
 export const sendPasswordRequest = createServerFn({ method: "POST" })
   .inputValidator((d: { email: string; targetPosition: string; content: string }) => d)
   .handler(async ({ data }) => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("sendPasswordRequest", data) as any; }
     const db = await admin();
     const email = data.email.trim().toLowerCase();
     const { data: profile } = await db
