@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrgContext } from "@/hooks/useOrg";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 type Result = { label: string; kind: string; to: string };
+type ResultsPosition = { top: number; left: number; width: number };
 
 /**
  * Recherche globale. Toutes les requêtes passent par la base : un membre ne peut
@@ -19,9 +22,38 @@ export function GlobalSearch({
 } = {}) {
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
+  const [resultsPosition, setResultsPosition] = useState<ResultsPosition | null>(null);
+  const searchRef = useRef<HTMLDivElement | null>(null);
   const org = useOrgContext();
   const navigate = useNavigate();
   const q = term.trim();
+
+  useEffect(() => {
+    if (!open) return;
+    const placeResults = () => {
+      const box = searchRef.current?.getBoundingClientRect();
+      if (!box) return;
+      const width = Math.min(352, window.innerWidth - 16);
+      setResultsPosition({
+        top: box.bottom + 6,
+        left: Math.max(8, Math.min(box.right - width, window.innerWidth - width - 8)),
+        width,
+      });
+    };
+    const closeOutside = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Node && !searchRef.current?.contains(target)) setOpen(false);
+    };
+    placeResults();
+    window.addEventListener("resize", placeResults);
+    window.addEventListener("scroll", placeResults, true);
+    document.addEventListener("pointerdown", closeOutside);
+    return () => {
+      window.removeEventListener("resize", placeResults);
+      window.removeEventListener("scroll", placeResults, true);
+      document.removeEventListener("pointerdown", closeOutside);
+    };
+  }, [open]);
 
   const results = useQuery({
     queryKey: ["global_search", q, sections.map((s) => s.to).join("|")],
@@ -194,7 +226,8 @@ export function GlobalSearch({
   if (org.isMentor || org.isFunder) return null;
 
   return (
-    <div className="relative shrink-0">
+    <div ref={searchRef} className="relative shrink-0">
+      <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
       <Input
         value={term}
         onChange={(e) => {
@@ -202,32 +235,51 @@ export function GlobalSearch({
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
-        placeholder="🔍 Rechercher…"
-        className="h-7 w-36 text-[11px] lg:w-48"
+        onKeyDown={(event) => {
+          if (event.key === "Escape") setOpen(false);
+        }}
+        placeholder="Rechercher…"
+        aria-label="Rechercher dans l'application"
+        aria-expanded={open && q.length >= 2}
+        aria-controls="global-search-results"
+        className="h-7 w-36 pl-7 text-[11px] lg:w-48"
       />
-      {open && q.length >= 2 && (
-        <div className="absolute right-0 z-40 mt-1 max-h-80 w-72 overflow-y-auto rounded border border-border bg-background p-1 shadow-lg">
-          {(results.data ?? []).length === 0 && (
-            <p className="p-2 text-xs text-muted-foreground">Aucun résultat.</p>
-          )}
-          {(results.data ?? []).map((r, i) => (
-            <Button
-              key={`${r.kind}-${i}`}
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start text-xs"
-              onClick={() => {
-                setOpen(false);
-                setTerm("");
-                navigate({ to: r.to });
-              }}
-            >
-              <span className="mr-2 text-muted-foreground">{r.kind}</span>
-              {r.label}
-            </Button>
-          ))}
-        </div>
-      )}
+      {open && q.length >= 2 && resultsPosition &&
+        createPortal(
+          <div
+            id="global-search-results"
+            role="listbox"
+            className="fixed z-[100] max-h-[min(24rem,60vh)] overflow-y-auto rounded-md border border-border bg-popover p-1.5 text-popover-foreground shadow-lg"
+            style={resultsPosition}
+          >
+            {results.isPending && (
+              <p className="p-3 text-xs text-muted-foreground">Recherche en cours…</p>
+            )}
+            {!results.isPending && (results.data ?? []).length === 0 && (
+              <p className="p-3 text-xs text-muted-foreground">Aucun résultat.</p>
+            )}
+            {(results.data ?? []).map((r, i) => (
+              <Button
+                key={`${r.kind}-${i}`}
+                role="option"
+                variant="ghost"
+                size="sm"
+                className="h-auto min-h-9 w-full justify-start gap-2 whitespace-normal px-2 py-2 text-left text-xs"
+                onClick={() => {
+                  setOpen(false);
+                  setTerm("");
+                  navigate({ to: r.to });
+                }}
+              >
+                <span className="w-20 shrink-0 text-[10px] font-semibold uppercase text-primary">
+                  {r.kind}
+                </span>
+                <span className="min-w-0 break-words">{r.label}</span>
+              </Button>
+            ))}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
