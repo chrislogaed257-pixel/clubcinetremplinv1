@@ -238,6 +238,7 @@ async function announceNewMember(
 }
 
 export const getBootstrapStatus = createServerFn({ method: "GET" }).handler(async () => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("getBootstrapStatus") as any; }
   return { needsBootstrap: (await memberCount()) === 0 };
 });
 
@@ -496,6 +497,7 @@ export const setMustChangePassword = createServerFn({ method: "POST" })
   .middleware([requireCloudAuth])
   .inputValidator((d: { id: string; value: boolean }) => d)
   .handler(async ({ data, context }) => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("setMustChangePassword", data) as any; }
     await assertProducer(context);
     const { error } = await context.supabase.rpc("admin_set_member_flags", {
       _id: data.id,

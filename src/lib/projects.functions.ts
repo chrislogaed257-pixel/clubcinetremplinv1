@@ -54,6 +54,7 @@ export const createProject = createServerFn({ method: "POST" })
   .middleware([requireCloudAuth])
   .inputValidator((d: CreateInput) => d)
   .handler(async ({ data, context }) => {
+    { const r = await import("@/lib/fn-relay.server"); if (r.needsRelay()) return r.relayFn("createProject", data) as any; }
     const db = await assertAllowed(context.userId);
     const title = data.title.trim();
     if (!title) throw new Error("Le titre du projet est obligatoire.");
