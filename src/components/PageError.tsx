@@ -11,7 +11,7 @@ const DELAYS_MS = [400, 1200, 2500];
  * seconde) sont réessayés en silence : l'utilisateur ne voit qu'un chargement.
  * Le message d'erreur n'apparaît qu'après plusieurs tentatives infructueuses.
  */
-export function PageError({ error, reset }: { error: Error; reset: () => void }) {
+export function PageError({ error, reset }: import("@tanstack/react-router").ErrorComponentProps) {
   const router = useRouter();
   const [attempt, setAttempt] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);

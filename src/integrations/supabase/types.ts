@@ -390,6 +390,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string
+          document: Json
           id: string
           is_open: boolean
           project_id: string | null
@@ -402,6 +403,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string
+          document?: Json
           id?: string
           is_open?: boolean
           project_id?: string | null
@@ -414,6 +416,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string
+          document?: Json
           id?: string
           is_open?: boolean
           project_id?: string | null
