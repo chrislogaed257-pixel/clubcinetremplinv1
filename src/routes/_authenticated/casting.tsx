@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { downloadCsv, openMail } from "@/lib/downloads";
+import { downloadCsv, downloadTextPdf, openMail } from "@/lib/downloads";
 
 export const Route = createFileRoute("/_authenticated/casting")({
   component: CastingPage,
@@ -53,6 +53,7 @@ type Application = {
   availability?: string;
   cinema_experience?: boolean | null;
   response_sent_at?: string | null;
+  extra?: Record<string, unknown> | null;
 };
 
 function CastingPage() {
@@ -330,6 +331,7 @@ function CastingPage() {
                       app={a}
                       onDecide={(status, comment) => decide.mutate({ id: a.id, status, comment })}
                       onMail={() => mailCandidate(a, c.title)}
+                      onDownload={() => downloadApplication(a, c.title)}
                     />
                   ))}
                 </CardContent>
@@ -342,14 +344,44 @@ function CastingPage() {
   );
 }
 
+/** Télécharge la fiche complétée par le candidat (PDF). */
+function downloadApplication(a: Application, callTitle: string) {
+  const extra = Object.entries(a.extra ?? {}).filter(([, v]) => String(v ?? "").trim());
+  downloadTextPdf({
+    title: `Fiche de candidature — ${a.full_name}`,
+    subtitle: callTitle,
+    fileName: `candidature-${a.full_name}`,
+    blocks: [
+      { label: "Nom et prénom", text: a.full_name },
+      { label: "Âge", text: a.age || "—" },
+      { label: "Province / Quartier", text: `${a.province ?? ""} / ${a.neighborhood ?? ""}` },
+      { label: "Commune / ville", text: a.city || "—" },
+      { label: "Téléphone WhatsApp", text: a.phone || "—" },
+      { label: "Adresse email", text: a.email || "—" },
+      { label: "Langues parlées", text: a.spoken_language || "—" },
+      { label: "Disponibilité", text: a.availability || "—" },
+      {
+        label: "Expérience en cinéma",
+        text: a.cinema_experience == null ? "—" : a.cinema_experience ? "Oui" : "Non",
+      },
+      ...extra.map(([k, v]) => ({ label: k, text: String(v) })),
+      { label: "Présentation", text: a.note || "—" },
+      { label: "Lien vidéo / book", text: a.link || "—" },
+      { label: "Reçue le", text: new Date(a.created_at).toLocaleString("fr-FR") },
+    ],
+  });
+}
+
 function ApplicationRow({
   app,
   onDecide,
   onMail,
+  onDownload,
 }: {
   app: Application;
   onDecide: (status: string, comment: string) => void;
   onMail: () => void;
+  onDownload: () => void;
 }) {
   const [comment, setComment] = useState(app.comment ?? "");
   const decided = app.status !== "pending";
@@ -381,6 +413,13 @@ function ApplicationRow({
           <span>Expérience en cinéma : {app.cinema_experience ? "Oui" : "Non"}</span>
         )}
         {app.availability && <span>Disponibilité : {app.availability}</span>}
+        {Object.entries(app.extra ?? {})
+          .filter(([, v]) => String(v ?? "").trim())
+          .map(([k, v]) => (
+            <span key={k}>
+              {k} : {String(v)}
+            </span>
+          ))}
       </div>
       {app.note && <p className="text-sm">{app.note}</p>}
       {app.link && (
@@ -394,7 +433,13 @@ function ApplicationRow({
         value={comment}
         onChange={(e) => setComment(e.target.value)}
       />
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" variant="ghost" onClick={onDownload}>
+          Télécharger la fiche
+        </Button>
+        <Button size="sm" variant="outline" onClick={onMail}>
+          Écrire au candidat
+        </Button>
         <Button size="sm" onClick={() => onDecide("selected", comment)}>
           Retenir
         </Button>
