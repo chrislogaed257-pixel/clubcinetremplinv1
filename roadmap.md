@@ -38,3 +38,8 @@
 - [x] Gestion des membres sur Vercel sans clé privée locale : modification, réinitialisation du mot de passe, suppression et activation via relais Lovable Cloud authentifié
 - [x] Modification d’un membre : préremplissage direct et groupé depuis la base, avec conservation vérifiée après enregistrement
 - [x] Barre supérieure compacte : mêmes raccourcis, informations et commandes, réorganisés pour libérer l’espace de travail
+
+## Plan 9 étapes (2 oct.)
+- [x] Lot 1 Casting (classement, suppression, réponse préremplie, modèles, fiche modifiable)
+- [x] Lot 8 Homme en Noir (base)
+- [ ] Lot 2 Projets/bailleur · Lot 3 Activités · Lot 4 Caisse · Lot 5 Contrats · Lot 6 Bénéfices · Lot 7 Organigramme
