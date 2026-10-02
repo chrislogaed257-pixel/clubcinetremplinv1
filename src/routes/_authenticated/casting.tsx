@@ -32,6 +32,7 @@ type Call = {
   description: string;
   public_token: string;
   is_open: boolean;
+  document?: unknown;
 };
 
 type Application = {
@@ -68,7 +69,10 @@ function CastingPage() {
   const projects = useQuery({
     queryKey: ["projects_casting"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("id,title");
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id,title")
+        .is("deleted_at", null);
       if (error) throw error;
       return (data ?? []) as { id: string; title: string }[];
     },
@@ -93,6 +97,7 @@ function CastingPage() {
       const { data, error } = await supabase
         .from("casting_applications")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Application[];
@@ -152,25 +157,98 @@ function CastingPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  /** Ouvre le client mail avec la réponse au candidat et note l'envoi. */
-  const mailCandidate = (a: Application, callTitle: string) => {
-    const key = a.status === "selected" ? "casting_selected" : "casting_rejected";
-    const t = (templates.data ?? []).find((x) => x.key === key);
-    const apply = (s: string) =>
-      s.replaceAll("{nom}", a.full_name).replaceAll("{appel}", callTitle);
-    const subject = t?.subject
-      ? apply(t.subject)
-      : `Ciné Tremplin — réponse à votre candidature (${callTitle})`;
-    const body = t?.body
-      ? apply(t.body)
-      : `Bonjour ${a.full_name},\n\n${
-          a.status === "selected"
-            ? `Votre candidature pour « ${callTitle} » a retenu notre attention. Nous revenons vers vous pour la suite.`
-            : `Après étude, votre candidature pour « ${callTitle} » n'a pas été retenue. Merci de votre confiance.`
-        }\n\nLe Club Ciné Tremplin`;
-    markResponseSent.mutate(a.id);
-    openMail(a.email, subject, body);
+  type Compose = {
+    app: Application;
+    callTitle: string;
+    project: string;
+    status: string;
+    to: string;
+    subject: string;
+    body: string;
   };
+  const [compose, setCompose] = useState<Compose | null>(null);
+  const [tplEdit, setTplEdit] = useState(false);
+  const [editCall, setEditCall] = useState<string | null>(null);
+
+  const roleOf = (a: Application) =>
+    String((a.extra as Record<string, unknown> | null)?.["Rôles souhaités"] ?? "").trim();
+
+  /** Message prérempli selon le statut (retenu / non retenu). */
+  const buildMessage = (a: Application, callTitle: string, project: string, status: string) => {
+    const key = status === "selected" ? "casting_selected" : "casting_rejected";
+    const t = (templates.data ?? []).find((x) => x.key === key);
+    const role = roleOf(a) || "proposé";
+    const apply = (s: string) =>
+      s
+        .replaceAll("{nom}", a.full_name)
+        .replaceAll("{appel}", callTitle)
+        .replaceAll("{role}", role)
+        .replaceAll("{projet}", project);
+    return {
+      subject: t?.subject ? apply(t.subject) : `Ciné Tremplin — votre candidature (${callTitle})`,
+      body: t?.body ? apply(t.body) : `Bonjour ${a.full_name},\n\nLe Club Ciné Tremplin`,
+    };
+  };
+
+  /** Ouvre la zone de réponse préremplie (destinataire, objet, message). */
+  const mailCandidate = (a: Application, callTitle: string, project?: string) => {
+    const proj = project || callTitle;
+    const status = a.status === "selected" ? "selected" : "rejected";
+    setCompose({ app: a, callTitle, project: proj, status, to: a.email, ...buildMessage(a, callTitle, proj, status) });
+  };
+
+  const sendCompose = () => {
+    if (!compose) return;
+    markResponseSent.mutate(compose.app.id);
+    openMail(compose.to, compose.subject, compose.body);
+    setCompose(null);
+  };
+
+  const removeApp = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("casting_applications")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["casting_applications"] });
+      toast.success("Candidature supprimée");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const saveTemplate = useMutation({
+    mutationFn: async (t: { key: string; subject: string; body: string }) => {
+      const { error } = await supabase
+        .from("message_templates")
+        .update({ subject: t.subject, body: t.body })
+        .eq("key", t.key);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["message_templates"] });
+      toast.success("Modèle enregistré");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const updateCall = useMutation({
+    mutationFn: async (c: { id: string; title: string; description: string; document: unknown }) => {
+      const { error } = await supabase
+        .from("casting_calls")
+        .update({ title: c.title, description: c.description, document: c.document as never })
+        .eq("id", c.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["casting_calls"] });
+      setEditCall(null);
+      toast.success("Fiche mise à jour — visible aussitôt par tous via le même lien");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const decide = useMutation({
     mutationFn: async ({ id, status, comment }: { id: string; status: string; comment: string }) => {
