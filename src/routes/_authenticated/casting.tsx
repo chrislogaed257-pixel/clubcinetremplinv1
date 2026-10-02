@@ -328,6 +328,60 @@ function CastingPage() {
             </form>
           </CardContent>
         </Card>
+        {compose && (
+          <Card className="h-fit border-primary/50 md:col-start-1">
+            <CardHeader>
+              <CardTitle className="text-sm">Répondre à {compose.app.full_name}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex gap-2">
+                {(["selected", "rejected"] as const).map((s) => (
+                  <Button
+                    key={s}
+                    size="sm"
+                    variant={compose.status === s ? "default" : "outline"}
+                    onClick={() =>
+                      setCompose({
+                        ...compose,
+                        status: s,
+                        ...buildMessage(compose.app, compose.callTitle, compose.project, s),
+                      })
+                    }
+                  >
+                    {s === "selected" ? "Retenu" : "Non retenu"}
+                  </Button>
+                ))}
+              </div>
+              <Label>Destinataire</Label>
+              <Input value={compose.to} onChange={(e) => setCompose({ ...compose, to: e.target.value })} />
+              <Label>Objet</Label>
+              <Input value={compose.subject} onChange={(e) => setCompose({ ...compose, subject: e.target.value })} />
+              <Label>Message</Label>
+              <Textarea rows={10} value={compose.body} onChange={(e) => setCompose({ ...compose, body: e.target.value })} />
+              <div className="flex gap-2">
+                <Button size="sm" onClick={sendCompose}>Envoyer</Button>
+                <Button size="sm" variant="ghost" onClick={() => setCompose(null)}>Annuler</Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        <Card className="h-fit md:col-start-1">
+          <CardHeader>
+            <CardTitle className="text-sm">Modèles de réponse</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button size="sm" variant="outline" onClick={() => setTplEdit(!tplEdit)}>
+              {tplEdit ? "Fermer" : "Modifier les messages retenu / non retenu"}
+            </Button>
+            {tplEdit &&
+              (templates.data ?? [])
+                .filter((t) => t.key === "casting_selected" || t.key === "casting_rejected")
+                .map((t) => <TemplateEditor key={t.key} tpl={t} onSave={(v) => saveTemplate.mutate(v)} />)}
+            <p className="text-xs text-muted-foreground">
+              Mots remplacés automatiquement : {"{nom}"}, {"{role}"}, {"{projet}"}, {"{appel}"}.
+            </p>
+          </CardContent>
+        </Card>
 
         <div className="space-y-4">
           {(calls.data ?? []).length === 0 && (
@@ -400,18 +454,54 @@ function CastingPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-2">
+                  <Button size="sm" variant="ghost" onClick={() => setEditCall(editCall === c.id ? null : c.id)}>
+                    {editCall === c.id ? "Fermer la modification" : "Modifier la fiche de candidature"}
+                  </Button>
+                  {editCall === c.id && (
+                    <CallEditor
+                      call={c}
+                      pending={updateCall.isPending}
+                      onSave={(v) => updateCall.mutate({ id: c.id, ...v })}
+                    />
+                  )}
                   {list.length === 0 && (
                     <p className="text-sm text-muted-foreground">Aucune candidature.</p>
                   )}
-                  {list.map((a) => (
-                    <ApplicationRow
-                      key={a.id}
-                      app={a}
-                      onDecide={(status, comment) => decide.mutate({ id: a.id, status, comment })}
-                      onMail={() => mailCandidate(a, c.title)}
-                      onDownload={() => downloadApplication(a, c.title)}
-                    />
-                  ))}
+                  {(() => {
+                    const proj = projects.data?.find((p) => p.id === c.project_id)?.title ?? c.title;
+                    const groups: { label: string; items: Application[] }[] = [];
+                    const pending = list.filter((a) => a.status === "pending");
+                    if (pending.length) groups.push({ label: "En attente", items: pending });
+                    const sel = list.filter((a) => a.status === "selected");
+                    const byRole = new Map<string, Application[]>();
+                    for (const a of sel) {
+                      const r = roleOf(a) || "Rôle non précisé";
+                      byRole.set(r, [...(byRole.get(r) ?? []), a]);
+                    }
+                    for (const [r, items] of byRole) groups.push({ label: `Retenus · ${r}`, items });
+                    const rej = list.filter((a) => a.status !== "pending" && a.status !== "selected");
+                    if (rej.length) groups.push({ label: "Non retenus", items: rej });
+                    return groups.map((g) => (
+                      <div key={g.label} className="space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {g.label} ({g.items.length})
+                        </p>
+                        {g.items.map((a) => (
+                          <ApplicationRow
+                            key={a.id}
+                            app={a}
+                            onDecide={(status, comment) => decide.mutate({ id: a.id, status, comment })}
+                            onMail={() => mailCandidate(a, c.title, proj)}
+                            onDownload={() => downloadApplication(a, c.title)}
+                            onDelete={() => {
+                              if (window.confirm(`Supprimer la candidature de ${a.full_name} ?`))
+                                removeApp.mutate(a.id);
+                            }}
+                          />
+                        ))}
+                      </div>
+                    ));
+                  })()}
                 </CardContent>
               </Card>
             );
