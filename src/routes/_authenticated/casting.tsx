@@ -32,6 +32,7 @@ type Call = {
   description: string;
   public_token: string;
   is_open: boolean;
+  document?: unknown;
 };
 
 type Application = {
@@ -68,7 +69,10 @@ function CastingPage() {
   const projects = useQuery({
     queryKey: ["projects_casting"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("id,title");
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id,title")
+        .is("deleted_at", null);
       if (error) throw error;
       return (data ?? []) as { id: string; title: string }[];
     },
@@ -93,6 +97,7 @@ function CastingPage() {
       const { data, error } = await supabase
         .from("casting_applications")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Application[];
@@ -152,25 +157,98 @@ function CastingPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  /** Ouvre le client mail avec la réponse au candidat et note l'envoi. */
-  const mailCandidate = (a: Application, callTitle: string) => {
-    const key = a.status === "selected" ? "casting_selected" : "casting_rejected";
-    const t = (templates.data ?? []).find((x) => x.key === key);
-    const apply = (s: string) =>
-      s.replaceAll("{nom}", a.full_name).replaceAll("{appel}", callTitle);
-    const subject = t?.subject
-      ? apply(t.subject)
-      : `Ciné Tremplin — réponse à votre candidature (${callTitle})`;
-    const body = t?.body
-      ? apply(t.body)
-      : `Bonjour ${a.full_name},\n\n${
-          a.status === "selected"
-            ? `Votre candidature pour « ${callTitle} » a retenu notre attention. Nous revenons vers vous pour la suite.`
-            : `Après étude, votre candidature pour « ${callTitle} » n'a pas été retenue. Merci de votre confiance.`
-        }\n\nLe Club Ciné Tremplin`;
-    markResponseSent.mutate(a.id);
-    openMail(a.email, subject, body);
+  type Compose = {
+    app: Application;
+    callTitle: string;
+    project: string;
+    status: string;
+    to: string;
+    subject: string;
+    body: string;
   };
+  const [compose, setCompose] = useState<Compose | null>(null);
+  const [tplEdit, setTplEdit] = useState(false);
+  const [editCall, setEditCall] = useState<string | null>(null);
+
+  const roleOf = (a: Application) =>
+    String((a.extra as Record<string, unknown> | null)?.["Rôles souhaités"] ?? "").trim();
+
+  /** Message prérempli selon le statut (retenu / non retenu). */
+  const buildMessage = (a: Application, callTitle: string, project: string, status: string) => {
+    const key = status === "selected" ? "casting_selected" : "casting_rejected";
+    const t = (templates.data ?? []).find((x) => x.key === key);
+    const role = roleOf(a) || "proposé";
+    const apply = (s: string) =>
+      s
+        .replaceAll("{nom}", a.full_name)
+        .replaceAll("{appel}", callTitle)
+        .replaceAll("{role}", role)
+        .replaceAll("{projet}", project);
+    return {
+      subject: t?.subject ? apply(t.subject) : `Ciné Tremplin — votre candidature (${callTitle})`,
+      body: t?.body ? apply(t.body) : `Bonjour ${a.full_name},\n\nLe Club Ciné Tremplin`,
+    };
+  };
+
+  /** Ouvre la zone de réponse préremplie (destinataire, objet, message). */
+  const mailCandidate = (a: Application, callTitle: string, project?: string) => {
+    const proj = project || callTitle;
+    const status = a.status === "selected" ? "selected" : "rejected";
+    setCompose({ app: a, callTitle, project: proj, status, to: a.email, ...buildMessage(a, callTitle, proj, status) });
+  };
+
+  const sendCompose = () => {
+    if (!compose) return;
+    markResponseSent.mutate(compose.app.id);
+    openMail(compose.to, compose.subject, compose.body);
+    setCompose(null);
+  };
+
+  const removeApp = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("casting_applications")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["casting_applications"] });
+      toast.success("Candidature supprimée");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const saveTemplate = useMutation({
+    mutationFn: async (t: { key: string; subject: string; body: string }) => {
+      const { error } = await supabase
+        .from("message_templates")
+        .update({ subject: t.subject, body: t.body })
+        .eq("key", t.key);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["message_templates"] });
+      toast.success("Modèle enregistré");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const updateCall = useMutation({
+    mutationFn: async (c: { id: string; title: string; description: string; document: unknown }) => {
+      const { error } = await supabase
+        .from("casting_calls")
+        .update({ title: c.title, description: c.description, document: c.document as never })
+        .eq("id", c.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["casting_calls"] });
+      setEditCall(null);
+      toast.success("Fiche mise à jour — visible aussitôt par tous via le même lien");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const decide = useMutation({
     mutationFn: async ({ id, status, comment }: { id: string; status: string; comment: string }) => {
@@ -203,6 +281,7 @@ function CastingPage() {
   return (
     <AppLayout title="Casting">
       <div className="grid gap-4 md:grid-cols-[340px_1fr]">
+        <div className="space-y-4">
         <Card className="h-fit">
           <CardHeader>
             <CardTitle className="text-sm">Nouvel appel à casting</CardTitle>
@@ -250,6 +329,61 @@ function CastingPage() {
             </form>
           </CardContent>
         </Card>
+        {compose && (
+          <Card className="h-fit border-primary/50">
+            <CardHeader>
+              <CardTitle className="text-sm">Répondre à {compose.app.full_name}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex gap-2">
+                {(["selected", "rejected"] as const).map((s) => (
+                  <Button
+                    key={s}
+                    size="sm"
+                    variant={compose.status === s ? "default" : "outline"}
+                    onClick={() =>
+                      setCompose({
+                        ...compose,
+                        status: s,
+                        ...buildMessage(compose.app, compose.callTitle, compose.project, s),
+                      })
+                    }
+                  >
+                    {s === "selected" ? "Retenu" : "Non retenu"}
+                  </Button>
+                ))}
+              </div>
+              <Label>Destinataire</Label>
+              <Input value={compose.to} onChange={(e) => setCompose({ ...compose, to: e.target.value })} />
+              <Label>Objet</Label>
+              <Input value={compose.subject} onChange={(e) => setCompose({ ...compose, subject: e.target.value })} />
+              <Label>Message</Label>
+              <Textarea rows={10} value={compose.body} onChange={(e) => setCompose({ ...compose, body: e.target.value })} />
+              <div className="flex gap-2">
+                <Button size="sm" onClick={sendCompose}>Envoyer</Button>
+                <Button size="sm" variant="ghost" onClick={() => setCompose(null)}>Annuler</Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        <Card className="h-fit">
+          <CardHeader>
+            <CardTitle className="text-sm">Modèles de réponse</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button size="sm" variant="outline" onClick={() => setTplEdit(!tplEdit)}>
+              {tplEdit ? "Fermer" : "Modifier les messages retenu / non retenu"}
+            </Button>
+            {tplEdit &&
+              (templates.data ?? [])
+                .filter((t) => t.key === "casting_selected" || t.key === "casting_rejected")
+                .map((t) => <TemplateEditor key={t.key} tpl={t} onSave={(v) => saveTemplate.mutate(v)} />)}
+            <p className="text-xs text-muted-foreground">
+              Mots remplacés automatiquement : {"{nom}"}, {"{role}"}, {"{projet}"}, {"{appel}"}.
+            </p>
+          </CardContent>
+        </Card>
+        </div>
 
         <div className="space-y-4">
           {(calls.data ?? []).length === 0 && (
@@ -322,18 +456,54 @@ function CastingPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-2">
+                  <Button size="sm" variant="ghost" onClick={() => setEditCall(editCall === c.id ? null : c.id)}>
+                    {editCall === c.id ? "Fermer la modification" : "Modifier la fiche de candidature"}
+                  </Button>
+                  {editCall === c.id && (
+                    <CallEditor
+                      call={c}
+                      pending={updateCall.isPending}
+                      onSave={(v) => updateCall.mutate({ id: c.id, ...v })}
+                    />
+                  )}
                   {list.length === 0 && (
                     <p className="text-sm text-muted-foreground">Aucune candidature.</p>
                   )}
-                  {list.map((a) => (
-                    <ApplicationRow
-                      key={a.id}
-                      app={a}
-                      onDecide={(status, comment) => decide.mutate({ id: a.id, status, comment })}
-                      onMail={() => mailCandidate(a, c.title)}
-                      onDownload={() => downloadApplication(a, c.title)}
-                    />
-                  ))}
+                  {(() => {
+                    const proj = projects.data?.find((p) => p.id === c.project_id)?.title ?? c.title;
+                    const groups: { label: string; items: Application[] }[] = [];
+                    const pending = list.filter((a) => a.status === "pending");
+                    if (pending.length) groups.push({ label: "En attente", items: pending });
+                    const sel = list.filter((a) => a.status === "selected");
+                    const byRole = new Map<string, Application[]>();
+                    for (const a of sel) {
+                      const r = roleOf(a) || "Rôle non précisé";
+                      byRole.set(r, [...(byRole.get(r) ?? []), a]);
+                    }
+                    for (const [r, items] of byRole) groups.push({ label: `Retenus · ${r}`, items });
+                    const rej = list.filter((a) => a.status !== "pending" && a.status !== "selected");
+                    if (rej.length) groups.push({ label: "Non retenus", items: rej });
+                    return groups.map((g) => (
+                      <div key={g.label} className="space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {g.label} ({g.items.length})
+                        </p>
+                        {g.items.map((a) => (
+                          <ApplicationRow
+                            key={a.id}
+                            app={a}
+                            onDecide={(status, comment) => decide.mutate({ id: a.id, status, comment })}
+                            onMail={() => mailCandidate(a, c.title, proj)}
+                            onDownload={() => downloadApplication(a, c.title)}
+                            onDelete={() => {
+                              if (window.confirm(`Supprimer la candidature de ${a.full_name} ?`))
+                                removeApp.mutate(a.id);
+                            }}
+                          />
+                        ))}
+                      </div>
+                    ));
+                  })()}
                 </CardContent>
               </Card>
             );
@@ -377,11 +547,13 @@ function ApplicationRow({
   onDecide,
   onMail,
   onDownload,
+  onDelete,
 }: {
   app: Application;
   onDecide: (status: string, comment: string) => void;
   onMail: () => void;
   onDownload: () => void;
+  onDelete: () => void;
 }) {
   const [comment, setComment] = useState(app.comment ?? "");
   const decided = app.status !== "pending";
@@ -395,8 +567,20 @@ function ApplicationRow({
         <span className="font-medium">{app.full_name}</span>
         <span className="text-xs text-muted-foreground">
           {app.age ? `${app.age} ans · ` : ""}
-          {app.city} · {app.email} · {app.phone}
+          {app.city} · {app.phone}
         </span>
+        <span className="text-xs">{app.email}</span>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-6 px-2 text-xs"
+          onClick={() => {
+            void navigator.clipboard.writeText(app.email);
+            toast.success("E-mail copié");
+          }}
+        >
+          Copier l'e-mail
+        </Button>
         <span className="ml-auto rounded bg-secondary px-2 py-0.5 text-xs">
           {app.status === "pending"
             ? "En attente"
@@ -451,6 +635,9 @@ function ApplicationRow({
             Répondre par email
           </Button>
         )}
+        <Button size="sm" variant="ghost" className="text-destructive" onClick={onDelete}>
+          Supprimer
+        </Button>
         {decided && <span className="self-center text-xs text-muted-foreground">Décision enregistrée</span>}
         {app.response_sent_at && (
           <span className="self-center text-xs text-muted-foreground">
@@ -458,6 +645,87 @@ function ApplicationRow({
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+function TemplateEditor({
+  tpl,
+  onSave,
+}: {
+  tpl: { key: string; subject: string; body: string };
+  onSave: (v: { key: string; subject: string; body: string }) => void;
+}) {
+  const [subject, setSubject] = useState(tpl.subject);
+  const [body, setBody] = useState(tpl.body);
+  return (
+    <div className="space-y-1 rounded border border-border p-2">
+      <p className="text-xs font-medium">{tpl.key === "casting_selected" ? "Candidat retenu" : "Candidat non retenu"}</p>
+      <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
+      <Textarea rows={8} value={body} onChange={(e) => setBody(e.target.value)} />
+      <Button size="sm" onClick={() => onSave({ key: tpl.key, subject, body })}>Enregistrer</Button>
+    </div>
+  );
+}
+
+type Role = { name: string; age: string; character: string; line: string };
+
+/** Modifie la fiche d'appel ; le lien public relit toujours la version à jour. */
+function CallEditor({
+  call,
+  pending,
+  onSave,
+}: {
+  call: Call;
+  pending: boolean;
+  onSave: (v: { title: string; description: string; document: unknown }) => void;
+}) {
+  const doc = (call.document ?? {}) as Record<string, unknown> & { roles?: Role[] };
+  const [title, setTitle] = useState(call.title);
+  const [description, setDescription] = useState(call.description ?? "");
+  const [roles, setRoles] = useState<Role[]>(doc.roles ?? []);
+  const [other, setOther] = useState(() => {
+    const { roles: _r, ...rest } = doc;
+    return JSON.stringify(rest, null, 2);
+  });
+  const setRole = (i: number, k: keyof Role, v: string) =>
+    setRoles(roles.map((r, j) => (j === i ? { ...r, [k]: v } : r)));
+  return (
+    <div className="space-y-2 rounded border border-border p-3">
+      <Label>Titre</Label>
+      <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+      <Label>Description</Label>
+      <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+      <Label>Rôles</Label>
+      {roles.map((r, i) => (
+        <div key={i} className="grid gap-1 rounded border border-border p-2 sm:grid-cols-2">
+          <Input placeholder="Nom du rôle" value={r.name} onChange={(e) => setRole(i, "name", e.target.value)} />
+          <Input placeholder="Âge" value={r.age} onChange={(e) => setRole(i, "age", e.target.value)} />
+          <Textarea rows={2} placeholder="Caractère" value={r.character} onChange={(e) => setRole(i, "character", e.target.value)} />
+          <Textarea rows={2} placeholder="Ligne émotionnelle" value={r.line} onChange={(e) => setRole(i, "line", e.target.value)} />
+        </div>
+      ))}
+      <Button size="sm" variant="outline" onClick={() => setRoles([...roles, { name: "", age: "", character: "", line: "" }])}>
+        Ajouter un rôle
+      </Button>
+      <Label>Autres informations de la fiche (dates, lieux…)</Label>
+      <Textarea rows={6} className="font-mono text-xs" value={other} onChange={(e) => setOther(e.target.value)} />
+      <Button
+        size="sm"
+        disabled={pending}
+        onClick={() => {
+          let rest: Record<string, unknown> = {};
+          try {
+            rest = other.trim() ? JSON.parse(other) : {};
+          } catch {
+            toast.error("Les autres informations sont mal formées.");
+            return;
+          }
+          onSave({ title, description, document: { ...rest, roles: roles.filter((r) => r.name.trim()) } });
+        }}
+      >
+        Enregistrer la fiche
+      </Button>
     </div>
   );
 }

@@ -127,6 +127,13 @@
       "when": 1790857623716,
       "tag": "0017_casting_call_document",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790939274137,
+      "tag": "0018_casting_soft_delete",
+      "breakpoints": true
     }
   ]
 }
