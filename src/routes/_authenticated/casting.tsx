@@ -281,6 +281,7 @@ function CastingPage() {
   return (
     <AppLayout title="Casting">
       <div className="grid gap-4 md:grid-cols-[340px_1fr]">
+        <div className="space-y-4">
         <Card className="h-fit">
           <CardHeader>
             <CardTitle className="text-sm">Nouvel appel à casting</CardTitle>
@@ -329,7 +330,7 @@ function CastingPage() {
           </CardContent>
         </Card>
         {compose && (
-          <Card className="h-fit border-primary/50 md:col-start-1">
+          <Card className="h-fit border-primary/50">
             <CardHeader>
               <CardTitle className="text-sm">Répondre à {compose.app.full_name}</CardTitle>
             </CardHeader>
@@ -365,7 +366,7 @@ function CastingPage() {
             </CardContent>
           </Card>
         )}
-        <Card className="h-fit md:col-start-1">
+        <Card className="h-fit">
           <CardHeader>
             <CardTitle className="text-sm">Modèles de réponse</CardTitle>
           </CardHeader>
@@ -382,6 +383,7 @@ function CastingPage() {
             </p>
           </CardContent>
         </Card>
+        </div>
 
         <div className="space-y-4">
           {(calls.data ?? []).length === 0 && (
@@ -545,11 +547,13 @@ function ApplicationRow({
   onDecide,
   onMail,
   onDownload,
+  onDelete,
 }: {
   app: Application;
   onDecide: (status: string, comment: string) => void;
   onMail: () => void;
   onDownload: () => void;
+  onDelete: () => void;
 }) {
   const [comment, setComment] = useState(app.comment ?? "");
   const decided = app.status !== "pending";
@@ -563,8 +567,20 @@ function ApplicationRow({
         <span className="font-medium">{app.full_name}</span>
         <span className="text-xs text-muted-foreground">
           {app.age ? `${app.age} ans · ` : ""}
-          {app.city} · {app.email} · {app.phone}
+          {app.city} · {app.phone}
         </span>
+        <span className="text-xs">{app.email}</span>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-6 px-2 text-xs"
+          onClick={() => {
+            void navigator.clipboard.writeText(app.email);
+            toast.success("E-mail copié");
+          }}
+        >
+          Copier l'e-mail
+        </Button>
         <span className="ml-auto rounded bg-secondary px-2 py-0.5 text-xs">
           {app.status === "pending"
             ? "En attente"
@@ -619,6 +635,9 @@ function ApplicationRow({
             Répondre par email
           </Button>
         )}
+        <Button size="sm" variant="ghost" className="text-destructive" onClick={onDelete}>
+          Supprimer
+        </Button>
         {decided && <span className="self-center text-xs text-muted-foreground">Décision enregistrée</span>}
         {app.response_sent_at && (
           <span className="self-center text-xs text-muted-foreground">
@@ -626,6 +645,87 @@ function ApplicationRow({
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+function TemplateEditor({
+  tpl,
+  onSave,
+}: {
+  tpl: { key: string; subject: string; body: string };
+  onSave: (v: { key: string; subject: string; body: string }) => void;
+}) {
+  const [subject, setSubject] = useState(tpl.subject);
+  const [body, setBody] = useState(tpl.body);
+  return (
+    <div className="space-y-1 rounded border border-border p-2">
+      <p className="text-xs font-medium">{tpl.key === "casting_selected" ? "Candidat retenu" : "Candidat non retenu"}</p>
+      <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
+      <Textarea rows={8} value={body} onChange={(e) => setBody(e.target.value)} />
+      <Button size="sm" onClick={() => onSave({ key: tpl.key, subject, body })}>Enregistrer</Button>
+    </div>
+  );
+}
+
+type Role = { name: string; age: string; character: string; line: string };
+
+/** Modifie la fiche d'appel ; le lien public relit toujours la version à jour. */
+function CallEditor({
+  call,
+  pending,
+  onSave,
+}: {
+  call: Call;
+  pending: boolean;
+  onSave: (v: { title: string; description: string; document: unknown }) => void;
+}) {
+  const doc = (call.document ?? {}) as Record<string, unknown> & { roles?: Role[] };
+  const [title, setTitle] = useState(call.title);
+  const [description, setDescription] = useState(call.description ?? "");
+  const [roles, setRoles] = useState<Role[]>(doc.roles ?? []);
+  const [other, setOther] = useState(() => {
+    const { roles: _r, ...rest } = doc;
+    return JSON.stringify(rest, null, 2);
+  });
+  const setRole = (i: number, k: keyof Role, v: string) =>
+    setRoles(roles.map((r, j) => (j === i ? { ...r, [k]: v } : r)));
+  return (
+    <div className="space-y-2 rounded border border-border p-3">
+      <Label>Titre</Label>
+      <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+      <Label>Description</Label>
+      <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+      <Label>Rôles</Label>
+      {roles.map((r, i) => (
+        <div key={i} className="grid gap-1 rounded border border-border p-2 sm:grid-cols-2">
+          <Input placeholder="Nom du rôle" value={r.name} onChange={(e) => setRole(i, "name", e.target.value)} />
+          <Input placeholder="Âge" value={r.age} onChange={(e) => setRole(i, "age", e.target.value)} />
+          <Textarea rows={2} placeholder="Caractère" value={r.character} onChange={(e) => setRole(i, "character", e.target.value)} />
+          <Textarea rows={2} placeholder="Ligne émotionnelle" value={r.line} onChange={(e) => setRole(i, "line", e.target.value)} />
+        </div>
+      ))}
+      <Button size="sm" variant="outline" onClick={() => setRoles([...roles, { name: "", age: "", character: "", line: "" }])}>
+        Ajouter un rôle
+      </Button>
+      <Label>Autres informations de la fiche (dates, lieux…)</Label>
+      <Textarea rows={6} className="font-mono text-xs" value={other} onChange={(e) => setOther(e.target.value)} />
+      <Button
+        size="sm"
+        disabled={pending}
+        onClick={() => {
+          let rest: Record<string, unknown> = {};
+          try {
+            rest = other.trim() ? JSON.parse(other) : {};
+          } catch {
+            toast.error("Les autres informations sont mal formées.");
+            return;
+          }
+          onSave({ title, description, document: { ...rest, roles: roles.filter((r) => r.name.trim()) } });
+        }}
+      >
+        Enregistrer la fiche
+      </Button>
     </div>
   );
 }
