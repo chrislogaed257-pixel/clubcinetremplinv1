@@ -307,6 +307,7 @@ export type Database = {
           city: string
           comment: string
           created_at: string
+          deleted_at: string | null
           email: string
           extra: Json
           full_name: string
@@ -330,6 +331,7 @@ export type Database = {
           city?: string
           comment?: string
           created_at?: string
+          deleted_at?: string | null
           email: string
           extra?: Json
           full_name: string
@@ -353,6 +355,7 @@ export type Database = {
           city?: string
           comment?: string
           created_at?: string
+          deleted_at?: string | null
           email?: string
           extra?: Json
           full_name?: string
